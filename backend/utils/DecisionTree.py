@@ -1,26 +1,35 @@
 import numpy as np
 from sklearn import tree
 from sklearn import preprocessing
-from joblib import dump
+from sklearn.metrics import accuracy_score
+from joblib import dump, load
 import pandas as pd
 
-def DecisionTreeClassifier(params):
-    train_dataset = pd.read_csv("./src/train.csv")
-    header = train_dataset.columns.values
-    train_dataset = train_dataset.to_numpy()
-    test_dataset = pd.read_csv("./src/test.csv")
-    test_x = test_dataset.to_numpy()
+def DecisionTreeClassifier(criterion, random_state, splitter, max_depth, max_leaf_nodes, min_samples_split, min_samples_leaf):
+    train_dataset = pd.read_csv("./src/train.csv").to_numpy()
+    test_dataset = pd.read_csv("./src/test.csv").to_numpy()
+    test_x = test_dataset[:, :-1]
+    test_y = test_dataset[:, -1]
     train_x = train_dataset[:, :-1]
     train_y = train_dataset[:, -1]
     enc = preprocessing.LabelEncoder()
     enc.fit(train_y)
     train_y = enc.transform(train_y)
-    clf = tree.DecisionTreeClassifier()  # loss=params['loss'], penalty=params['penalty'], alpha=params['alpha'],
-    # max_iter=params['max_iter'], tol=params['tol'], shuffle=params['shuffle'], random_state=params['random_state']
+    clf = tree.DecisionTreeClassifier(criterion=criterion, random_state=random_state, splitter=splitter, max_depth=max_depth, max_leaf_nodes=max_leaf_nodes, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf)
     clf.fit(train_x, train_y)
-    result = clf.predict(test_x)
-    result = enc.inverse_transform(result)
-    test_dataset[header[-1]] = result
-    test_dataset.to_csv("./src/test_result.csv", index=False)
-    dump(clf, "./src/train.model")
+    y_pred = clf.predict(test_x)
+    dump(enc, "./src/encoder.model")
+    dump(clf, "./src/model.model")
+    test_y = enc.transform(test_y)
+    return accuracy_score(test_y, y_pred)
+
+
+def DecisionTreeClassifierPredict():
+    clf = load("./src/model.model")
+    enc = load("./src/encoder.model")
+    predict_dataset = pd.read_csv("./src/predict.csv")
+    predict_x = predict_dataset.to_numpy()
+    result = clf.predict(predict_x)
+    predict_dataset['result'] = enc.inverse_transform(result)
+    predict_dataset.to_csv('./src/result.csv', index=False)
 
