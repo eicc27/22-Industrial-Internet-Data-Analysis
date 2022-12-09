@@ -19,7 +19,7 @@ class Dataloader:
     
     def load(self) -> pd.DataFrame:
         # load job dispatcher
-        if self.fpath.endswith('csv'): # prefix condition: file name ends with xls xlsx or csv
+        if self.fpath.endswith('csv'): # prefix condition: file name ends with xlsx or csv
             Logger(f"CSV file {self.fpath} detected.").log('info')
             return self._load_csv()
         else:
