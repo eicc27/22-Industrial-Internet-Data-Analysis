@@ -56,7 +56,7 @@ class Padding:
                 except ValueError:  # the value is not suitable for classification
                     Logger(
                         f"The column(idx. {self.column_index}) is not suitable for classification. Turned to RF-Regressor instead.").log('warn')
-                    return self._knnr_padding()
+                    return self._forestr_padding()
             case 'forestr':
                 return self._forestr_padding()
             case '_':  # internal error while passing params
