@@ -1,4 +1,3 @@
-import numpy as np
 from sklearn import tree
 from sklearn import preprocessing
 from sklearn.metrics import accuracy_score
