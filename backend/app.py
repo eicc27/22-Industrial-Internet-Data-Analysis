@@ -24,13 +24,8 @@ def linearReg():
         loss = request.form.get('loss')
         max_iter = int(request.form.get('max_iter'))
         shuffle = request.form.get('shuffle') == 'true'
-        random_state = int(request.form.get('random_state'))
-        print(random_state)
         tol = float(request.form.get('tol'))
-        print(tol)
-        penalty = request.form.get('penalty')
-        alpha = float(request.form.get('alpha'))
-        print(loss, max_iter, shuffle, random_state, tol, penalty, alpha)
+
     except:
         return jsonify({
             'code': 401,
@@ -38,7 +33,7 @@ def linearReg():
         })
 
     try:
-        error = LinearRegression(loss, max_iter, shuffle, random_state, tol, penalty, alpha)
+        error = LinearRegression(loss, max_iter, shuffle, tol)
         return jsonify({
             'code': 200,
             'msg': "训练成功",
@@ -67,13 +62,9 @@ def decisionTree():
 
     try:
         criterion = request.form.get('criterion')
-        random_state = int(request.form.get('random_state'))
-        splitter = request.form.get("splitter")
         max_depth = int(request.form.get("max_depth"))
         max_leaf_nodes = int(request.form.get("max_leaf_nodes"))
-        min_samples_leaf = int(request.form.get("min_samples_leaf"))
-        min_samples_split = int(request.form.get("min_samples_split"))
-        print(criterion, random_state, splitter, max_depth, max_leaf_nodes, min_samples_split, min_samples_leaf)
+
     except:
         return jsonify({
             'code': 401,
@@ -81,7 +72,7 @@ def decisionTree():
         })
 
     try:
-        accuracy = DecisionTreeClassifier(criterion, random_state, splitter, max_depth, max_leaf_nodes, min_samples_split, min_samples_leaf)
+        accuracy = DecisionTreeClassifier(criterion, max_depth, max_leaf_nodes)
         return jsonify({
             'code': 200,
             'msg': "训练成功",
@@ -109,11 +100,9 @@ def SVM():
     try:
         C = float(request.form.get('C'))
         kernel = request.form.get("kernel")
-        degree = int(request.form.get("degree"))
         tol = float(request.form.get('tol'))
         max_iter = int(request.form.get("max_iter"))
-        random_state = int(request.form.get('random_state'))
-        print(C, kernel, degree, tol, max_iter, random_state)
+
     except:
         return jsonify({
             'code': 401,
@@ -121,7 +110,7 @@ def SVM():
         })
 
     try:
-        accuracy = SVMClassifier(C, kernel, degree, tol, max_iter, random_state)
+        accuracy = SVMClassifier(C, kernel, tol, max_iter)
         return jsonify({
             'code': 200,
             'msg': "训练成功",

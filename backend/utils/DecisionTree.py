@@ -4,7 +4,7 @@ from sklearn.metrics import accuracy_score
 from joblib import dump, load
 import pandas as pd
 
-def DecisionTreeClassifier(criterion, random_state, splitter, max_depth, max_leaf_nodes, min_samples_split, min_samples_leaf):
+def DecisionTreeClassifier(criterion, max_depth, max_leaf_nodes):
     train_dataset = pd.read_csv("./src/train.csv").to_numpy()
     test_dataset = pd.read_csv("./src/test.csv").to_numpy()
     test_x = test_dataset[:, :-1]
@@ -14,7 +14,7 @@ def DecisionTreeClassifier(criterion, random_state, splitter, max_depth, max_lea
     enc = preprocessing.LabelEncoder()
     enc.fit(train_y)
     train_y = enc.transform(train_y)
-    clf = tree.DecisionTreeClassifier(criterion=criterion, random_state=random_state, splitter=splitter, max_depth=max_depth, max_leaf_nodes=max_leaf_nodes, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf)
+    clf = tree.DecisionTreeClassifier(criterion=criterion, max_depth=max_depth, max_leaf_nodes=max_leaf_nodes)
     clf.fit(train_x, train_y)
     y_pred = clf.predict(test_x)
     dump(enc, "./src/encoder.model")
