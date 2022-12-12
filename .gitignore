@@ -1,4 +1,8 @@
 .vscode
-.idea
-venv
-*/*.ipynb
+*/**/.idea
+*/**/venv
+*/**/*.ipynb
+*/**/*.csv
+*/**/*.xlsx
+*/**/*.xls
+*/**/__pycache__
