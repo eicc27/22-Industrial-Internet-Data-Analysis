@@ -1,8 +1,8 @@
-.vscode
-*/**/.idea
-*/**/venv
+*/**/.vscode/
+*/**/.idea/
+*/**/venv/
 */**/*.ipynb
 */**/*.csv
 */**/*.xlsx
 */**/*.xls
-*/**/__pycache__
+*/**/__pycache__/
