@@ -13,11 +13,34 @@
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <title>数据分析</title>
     <style>
+        body, html, #app{
+            margin: 0 0;
+            height:100%;
+        }
+        .el-container{
+            margin: 0 auto;
+            height:100%;
+        }
+        
+        .el-header, .el-footer{
+            margin: 0 auto;
+            width: 100%;
+            background-color:rgba(0, 204, 255, 0.15);
+            text-align: center;
+
+        }
+        .el-main{
+            margin: 0 auto;
+            width: auto;
+        }
         .block {
             display: inline-table;
             margin: 0 auto;
             width: auto;
-        }
+            padding: 20px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 6px rgba(0, 0, 0, 0.08);
+      }
 
         .el-row {
             margin-bottom: 20px;
@@ -28,126 +51,149 @@
 <body>
     <div id="app">
         <el-container>
-            <!-- 0.欢迎界面 -->
-            <div class="block" v-if="visibleStep[0].visible">
-                <div>Welcome!!!</div>
-                <el-footer>
-                    <el-button type="primary" round v-on:click="turnToNextStep(0)">下一步</el-button>
-                </el-footer>
-            </div>
-            <!-- 0.欢迎界面end -->
-            <!-- 1.训练数据上传 -->
-            <div class="block" v-if="visibleStep[1].visible">
-                <el-row>
-                    <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
-                        ref="upload" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload" name="train.csv"
-                        :auto-upload="false" :on-success="handleUploadSuccess" :limit="1">
-                        <i class="el-icon-upload">训练数据</i>
-                        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-                    </el-upload>
-                    <el-button type="primary" round v-on:click="upload">确认上传</el-button>
-                </el-row>
-                <el-footer>
-                    <el-button type="primary" round v-on:click="turnToPrevStep(1)">上一步</el-button>
-                    <el-button type="primary" round v-on:click="turnToNextStep(1);algorithm_get()">下一步</el-button>
-                </el-footer>
-            </div>
-            <!-- 1.训练数据上传end -->
-            <!-- 2.算法选择 -->
-            <div class="block" v-if="visibleStep[2].visible">
-                <!-- 2.1缺失值处理 -->
-                <el-row>
-                    <div>缺失值处理</div>
-                    <el-select v-model="value_1" placeholder="请选择">
-                        <el-option v-for="item in options_1" :key="item.value" :label="item.label" :value="item.value">
-                        </el-option>
-                    </el-select>
-                    <div v-if="value_1">
-                        {{options_1[value_1-1].description}}
-                    </div>
-                </el-row>
-                <!-- 2.1缺失值处理end -->
-                <!-- 2.2归一化方法 -->
-                <el-row>
-                    <div>归一化方法</div>
-                    <el-select v-model="value_2" placeholder="请选择">
-                        <el-option v-for="item in options_2" :key="item.value" :label="item.label" :value="item.value">
-                        </el-option>
-                    </el-select>
-                    <div v-if="value_2">
-                        {{options_2[value_2-1].description}}
-                    </div>
-                </el-row>
-                <!-- 2.2归一化方法end -->
-                <!-- 2.3数据筛选算法 -->
-                <el-row>
-                    <div>数据筛选算法</div>
-                    <el-select v-model="value_3" placeholder="请选择">
-                        <el-option v-for="item in options_3" :key="item.value" :label="item.label" :value="item.value">
-                        </el-option>
-                    </el-select>
-                    <div v-if="value_3">
-                        {{options_3[value_3-1].description}}
-                    </div>
-                </el-row>
-                <!-- 2.3数据筛选算法end -->
-                <!-- 2.4单列相关系数统计算法 -->
-                <el-row>
-                    <div>单列相关系数统计算法</div>
-                    <el-select v-model="value_4" placeholder="请选择">
-                        <el-option v-for="item in options_4" :key="item.value" :label="item.label" :value="item.value">
-                        </el-option>
-                    </el-select>
-                    <div v-if="value_4">
-                        {{options_4[value_4-1].description}}
-                    </div>
-                </el-row>
-                <!-- 2.4单列相关系数统计算法end -->
-                
-                <el-footer>
-                    <el-button type="primary" round v-on:click="turnToPrevStep(2)">上一步</el-button>
-                    <el-button type="primary" round v-on:click="turnToNextStep(2);wait_train()">开始训练</el-button>
-                </el-footer>
-            </div>
-            <!-- 2.算法选择end -->
-            <!-- 3.输出模型-->
-            <div class="block" v-if="visibleStep[3].visible">
-                <el-button type="primary" round v-on:click="download">点击下载模型</el-button>
-                <el-button type="primary" round v-on:click="turnToNextStep(3)">以此模型进行数据预测</el-button>
-                <el-footer>
-                    <el-button type="primary" round v-on:click="turnToPrevStep(3)">上一步</el-button>
-                    <el-button type="primary" round v-on:click="turnToStep0(3)">重新开始</el-button>
-                </el-footer>
-            </div>
-            <!-- 3.输出模型end-->
-            <!-- 4.上传预测文件-->
-            <div class="block" v-if="visibleStep[4].visible">
-                <el-row>
-                    <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
-                        ref="upload" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload" name="predict.csv"
-                        :auto-upload="false" :on-success="handleUploadSuccess" :limit="1">
-                        <i class="el-icon-upload">要预测的数据</i>
-                        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-                    </el-upload>
-                    <el-button type="primary" round v-on:click="upload">确认上传</el-button>
-                </el-row>
-                <el-footer>
-                    <el-button type="primary" round v-on:click="turnToPrevStep(4)">上一步</el-button>
-                    <el-button type="primary" round v-on:click="turnToNextStep(4);predict()">进行预测</el-button>
-                    <el-button type="primary" round v-on:click="turnToStep0(4)">重新开始</el-button>
-                </el-footer>
-            </div>
-            <!-- 4.上传预测文件end-->
-            <!-- 5.预测结果及下载-->
-            <div class="block" v-if="visibleStep[5].visible">
-                <el-button type="primary" round v-on:click="download">点击下载预测结果</el-button>
-                <el-button type="primary" round v-on:click="showChart">查看预测结果</el-button>
-                <el-footer>
-                    <el-button type="primary" round v-on:click="turnToPrevStep(5)">上一步</el-button>
-                    <el-button type="primary" round v-on:click="turnToStep0(5)">重新开始</el-button>
-                </el-footer>
-            </div>
-            <!-- 5.预测结果及下载end-->
+            <el-header> 
+                <h1>房价数据分析和预测</h1>
+            </el-header>
+            <el-main>
+                <!-- 0.欢迎界面 -->
+                <div class="block" v-if="visibleStep[0].visible">
+                    <el-row>
+                        利用房价数据为您精准预测房价，<del>没有中间商赚差价</del>
+                    </el-row>
+                    <el-row type="flex" justify="center">
+                        <el-button type="primary" round v-on:click="turnToNextStep(0)">开始</el-button>
+                    </el-row>
+                </div>
+                <!-- 0.欢迎界面end -->
+                <!-- 1.训练数据上传 -->
+                <div class="block" v-if="visibleStep[1].visible">
+                    <el-row>1、上传训练数据集</el-row>
+                    <el-row>
+                        <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
+                            ref="upload" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload" name="train.csv"
+                            :auto-upload="false" :on-success="handleUploadSuccess" :limit="1">
+                            <i class="el-icon-upload">训练数据</i>
+                            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                        </el-upload>
+                        <el-row type="flex" justify="center">
+                            <el-button type="primary" round v-on:click="upload">确认上传</el-button>
+                        </el-row>
+                    </el-row>
+                    <el-row type="flex" justify="center">
+                        <el-button type="primary" round v-on:click="turnToPrevStep(1)">上一步</el-button>
+                        <el-button type="primary" round v-on:click="turnToNextStep(1);algorithm_get()">下一步</el-button>
+                    </el-row>
+                </div>
+                <!-- 1.训练数据上传end -->
+                <!-- 2.算法选择 -->
+                <div class="block" v-if="visibleStep[2].visible">
+                    <el-row>2、选择训练算法</el-row>
+                    <!-- 2.1缺失值处理 -->
+                    <el-row>
+                        <div>缺失值处理</div>
+                        <el-select v-model="value_1" placeholder="请选择">
+                            <el-option v-for="item in options_1" :key="item.value" :label="item.label" :value="item.value">
+                            </el-option>
+                        </el-select>
+                        <div v-if="value_1">
+                            {{options_1[value_1-1].description}}
+                        </div>
+                    </el-row>
+                    <!-- 2.1缺失值处理end -->
+                    <!-- 2.2归一化方法 -->
+                    <el-row>
+                        <div>归一化方法</div>
+                        <el-select v-model="value_2" placeholder="请选择">
+                            <el-option v-for="item in options_2" :key="item.value" :label="item.label" :value="item.value">
+                            </el-option>
+                        </el-select>
+                        <div v-if="value_2">
+                            {{options_2[value_2-1].description}}
+                        </div>
+                    </el-row>
+                    <!-- 2.2归一化方法end -->
+                    <!-- 2.3数据筛选算法 -->
+                    <el-row>
+                        <div>数据筛选算法</div>
+                        <el-select v-model="value_3" placeholder="请选择">
+                            <el-option v-for="item in options_3" :key="item.value" :label="item.label" :value="item.value">
+                            </el-option>
+                        </el-select>
+                        <div v-if="value_3">
+                            {{options_3[value_3-1].description}}
+                        </div>
+                    </el-row>
+                    <!-- 2.3数据筛选算法end -->
+                    <!-- 2.4单列相关系数统计算法 -->
+                    <el-row>
+                        <div>单列相关系数统计算法</div>
+                        <el-select v-model="value_4" placeholder="请选择">
+                            <el-option v-for="item in options_4" :key="item.value" :label="item.label" :value="item.value">
+                            </el-option>
+                        </el-select>
+                        <div v-if="value_4">
+                            {{options_4[value_4-1].description}}
+                        </div>
+                    </el-row>
+                    <!-- 2.4单列相关系数统计算法end -->
+                    
+                    <el-row type="flex" justify="center">
+                        <el-button type="primary" round v-on:click="turnToPrevStep(2)">上一步</el-button>
+                        <el-button type="primary" round v-on:click="turnToNextStep(2);wait_train()">开始训练</el-button>
+                    </el-row>
+                </div>
+                <!-- 2.算法选择end -->
+                <!-- 3.输出模型-->
+                <div class="block" v-if="visibleStep[3].visible">
+                    <el-row>3、获得分析模型</el-row>
+                    <el-row>
+                        <el-button type="primary" round v-on:click="download">点击下载模型</el-button>
+                        <el-button type="primary" round v-on:click="turnToNextStep(3)">以此模型进行数据预测</el-button>
+                    </el-row>
+                    <el-row type="flex" justify="center">
+                        <el-button type="primary" round v-on:click="turnToPrevStep(3)">上一步</el-button>
+                        <el-button type="danger" round v-on:click="turnToStep0(3)">首页</el-button>
+                    </el-row>
+                </div>
+                <!-- 3.输出模型end-->
+                <!-- 4.上传预测文件-->
+                <div class="block" v-if="visibleStep[4].visible">
+                    <el-row>4、上传预测文件</el-row>
+                    <el-row>
+                        <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
+                            ref="upload" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload" name="predict.csv"
+                            :auto-upload="false" :on-success="handleUploadSuccess" :limit="1">
+                            <i class="el-icon-upload">预测数据</i>
+                            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                        </el-upload>
+                        <el-row type="flex" justify="center">
+                            <el-button type="primary" round v-on:click="upload">确认上传</el-button>
+                        </el-row>
+                    </el-row>
+                    <el-row type="flex" justify="center">
+                        <el-button type="primary" round v-on:click="turnToPrevStep(4)">上一步</el-button>
+                        <el-button type="primary" round v-on:click="turnToNextStep(4);predict()">进行预测</el-button>
+                        <el-button type="danger" round v-on:click="turnToStep0(4)">首页</el-button>
+                    </el-row>
+                </div>
+                <!-- 4.上传预测文件end-->
+                <!-- 5.预测结果及下载-->
+                <div class="block" v-if="visibleStep[5].visible">
+                    <el-row>5、预测结果及下载</el-row>
+                    <el-row type="flex" justify="center">
+                        <el-button type="primary" round v-on:click="download">点击下载预测结果</el-button>
+                        <el-button type="primary" round v-on:click="showChart">查看预测结果</el-button>
+                    </el-row>
+                    <el-row type="flex" justify="center">
+                        <el-button type="primary" round v-on:click="turnToPrevStep(5)">上一步</el-button>
+                        <el-button type="danger" round v-on:click="turnToStep0(5)">首页</el-button>
+                    </el-row>
+                </div>
+                <!-- 5.预测结果及下载end-->
+            </el-main>
+            <el-footer>
+                <h3></h3>
+            </el-footer>
         </el-container>
     </div>
 </body>
@@ -248,7 +294,7 @@
             },
             predict(){
                 //TODO
-                alert('pridicting...');
+                alert('predicting...');
             },
             algorithm_get(){
                 //TODO
