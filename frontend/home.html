@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 1. 引入vue -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <!-- 2. 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css" />
+    <!-- 3. 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <title>数据分析</title>
+    <style>
+        .block {
+            display: inline-table;
+            margin: 0 auto;
+            width: auto;
+        }
+
+        .el-row {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <el-container>
+            <!-- 0.欢迎界面 -->
+            <div class="block" v-if="visibleStep[0].visible">
+                <div>Welcome!!!</div>
+                <el-footer>
+                    <el-button type="primary" round v-on:click="turnToNextStep(0)">下一步</el-button>
+                </el-footer>
+            </div>
+            <!-- 0.欢迎界面end -->
+            <!-- 1.训练数据上传 -->
+            <div class="block" v-if="visibleStep[1].visible">
+                <el-row>
+                    <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
+                        ref="upload" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload" name="train.csv"
+                        :auto-upload="false" :on-success="handleUploadSuccess" :limit="1">
+                        <i class="el-icon-upload">训练数据</i>
+                        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                    </el-upload>
+                    <el-button type="primary" round v-on:click="upload">确认上传</el-button>
+                </el-row>
+                <el-footer>
+                    <el-button type="primary" round v-on:click="turnToPrevStep(1)">上一步</el-button>
+                    <el-button type="primary" round v-on:click="turnToNextStep(1);algorithm_get()">下一步</el-button>
+                </el-footer>
+            </div>
+            <!-- 1.训练数据上传end -->
+            <!-- 2.算法选择 -->
+            <div class="block" v-if="visibleStep[2].visible">
+                <!-- 2.1缺失值处理 -->
+                <el-row>
+                    <div>缺失值处理</div>
+                    <el-select v-model="value_1" placeholder="请选择">
+                        <el-option v-for="item in options_1" :key="item.value" :label="item.label" :value="item.value">
+                        </el-option>
+                    </el-select>
+                    <div v-if="value_1">
+                        {{options_1[value_1-1].description}}
+                    </div>
+                </el-row>
+                <!-- 2.1缺失值处理end -->
+                <!-- 2.2归一化方法 -->
+                <el-row>
+                    <div>归一化方法</div>
+                    <el-select v-model="value_2" placeholder="请选择">
+                        <el-option v-for="item in options_2" :key="item.value" :label="item.label" :value="item.value">
+                        </el-option>
+                    </el-select>
+                    <div v-if="value_2">
+                        {{options_2[value_2-1].description}}
+                    </div>
+                </el-row>
+                <!-- 2.2归一化方法end -->
+                <!-- 2.3数据筛选算法 -->
+                <el-row>
+                    <div>数据筛选算法</div>
+                    <el-select v-model="value_3" placeholder="请选择">
+                        <el-option v-for="item in options_3" :key="item.value" :label="item.label" :value="item.value">
+                        </el-option>
+                    </el-select>
+                    <div v-if="value_3">
+                        {{options_3[value_3-1].description}}
+                    </div>
+                </el-row>
+                <!-- 2.3数据筛选算法end -->
+                <!-- 2.4单列相关系数统计算法 -->
+                <el-row>
+                    <div>单列相关系数统计算法</div>
+                    <el-select v-model="value_4" placeholder="请选择">
+                        <el-option v-for="item in options_4" :key="item.value" :label="item.label" :value="item.value">
+                        </el-option>
+                    </el-select>
+                    <div v-if="value_4">
+                        {{options_4[value_4-1].description}}
+                    </div>
+                </el-row>
+                <!-- 2.4单列相关系数统计算法end -->
+                <!-- 2.算法选择end -->
+                <el-footer>
+                    <el-button type="primary" round v-on:click="turnToPrevStep(2)">上一步</el-button>
+                    <el-button type="primary" round v-on:click="turnToNextStep(2);wait_train()">开始训练</el-button>
+                </el-footer>
+            </div>
+            <div class="block" v-if="visibleStep[3].visible">
+                <el-button type="primary" round v-on:click="download">点击下载模型</el-button>
+                <el-button type="primary" round v-on:click="turnToNextStep(3)">以此模型进行数据预测</el-button>
+                <el-footer>
+                    <el-button type="primary" round v-on:click="turnToPrevStep(3)">上一步</el-button>
+                    <el-button type="primary" round v-on:click="turnToStep0(3)">重新开始</el-button>
+                </el-footer>
+            </div>
+            <div class="block" v-if="visibleStep[4].visible">
+                <el-row>
+                    <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
+                        ref="upload" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload" name="predict.csv"
+                        :auto-upload="false" :on-success="handleUploadSuccess" :limit="1">
+                        <i class="el-icon-upload">要预测的数据</i>
+                        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                    </el-upload>
+                    <el-button type="primary" round v-on:click="upload">确认上传</el-button>
+                </el-row>
+                <el-footer>
+                    <el-button type="primary" round v-on:click="turnToPrevStep(4)">上一步</el-button>
+                    <el-button type="primary" round v-on:click="turnToNextStep(4);predict()">进行预测</el-button>
+                    <el-button type="primary" round v-on:click="turnToStep0(4)">重新开始</el-button>
+                </el-footer>
+            </div>
+            <div class="block" v-if="visibleStep[5].visible">
+                <el-button type="primary" round v-on:click="download">点击下载预测结果</el-button>
+                <el-button type="primary" round v-on:click="showChart">查看预测结果</el-button>
+                <el-footer>
+                    <el-button type="primary" round v-on:click="turnToPrevStep(5)">上一步</el-button>
+                    <el-button type="primary" round v-on:click="turnToStep0(5)">重新开始</el-button>
+                </el-footer>
+            </div>
+        </el-container>
+    </div>
+</body>
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                fileList: [],
+                //score用来存储推荐程度
+                //缺失值处理
+                options_1: [{
+                    value: 1,
+                    label: 'zero',
+                    description: 'zero算法是...(可能会有图,要预留空间)',
+                    score: '',
+                    image: ''
+                }, {
+                    value: 2,
+                    label: 'mean',
+                    description: 'mean算法是...',
+                    score: '',
+                    image: ''
+                }],
+                value_1: '',
+                //归一化方法
+                options_2: [{
+                    value: 1,
+                    label: 'minmax',
+                    description: 'minmax算法是...',
+                    score: '',
+                    image: ''
+                }],
+                value_2: '',
+                //数据筛选算法
+                options_3: [{
+                    value: 1,
+                    label: 'mad',
+                    description: 'mad算法是...',
+                    score: '',
+                    image: ''
+                }],
+                value_3: '',
+                //单列相关系数统计算法
+                options_4: [{
+                    value: 1,
+                    label: 'forest',
+                    description: 'forest算法是...',
+                    score: '',
+                    image: ''
+                }],
+                value_4: '',
+
+                //进行到哪一步，哪一步可见
+                visibleStep: [
+                    { visible: true, lable: 'step0' },
+                    { visible: false, lable: 'step1' },
+                    { visible: false, lable: 'step2' },
+                    { visible: false, lable: 'step3' },
+                    { visible: false, lable: 'step4' },
+                    { visible: false, lable: 'step5' },
+                ]
+            };
+        },
+        methods: {
+            handleUploadSuccess(res, file) {
+                this.$message.success('上传成功!');
+            },
+            beforeUpload(file) {
+                const isCSV = file.type === 'text/csv';
+                if (!isCSV) {
+                    this.$message.error('上传文件只能是 csv 格式!');
+                }
+                return isCSV;
+            },
+            upload() {
+                this.$refs.upload.submit();
+            },
+            turnToPrevStep(step) {
+                this.visibleStep[step-1].visible = true;
+                this.visibleStep[step].visible = false;
+            },
+            turnToNextStep(step) {
+                this.visibleStep[step+1].visible = true;
+                this.visibleStep[step].visible = false;
+            },
+            turnToStep0(step) {
+                this.visibleStep[0].visible = true;
+                this.visibleStep[step].visible = false;
+            },
+            wait_train(){
+                //TODO
+                alert('training...');
+            },
+            download(){
+                //TODO
+                alert('downloading...(要用户指定下载地址)');
+            },
+            predict(){
+                //TODO
+                alert('pridicting...');
+            },
+            algorithm_get(){
+                //TODO
+                alert('algorithm_getting...');
+            },
+            showChart(){
+                //TODO
+                alert('chart TODO');
+            }
+
+        },
+        created() {
+            //上传文件地址
+            this.uploadUrl = "https://930d4a54-3745-4938-8384-c8570928a27b.mock.pstmn.io/upload";
+        }
+    });
+</script>
+
+</html>
