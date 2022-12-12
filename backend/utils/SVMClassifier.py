@@ -6,7 +6,7 @@ from joblib import dump, load
 import pandas as pd
 
 
-def SVMClassifier(C, kernel, degree, tol, max_iter, random_state):
+def SVMClassifier(C, kernel, tol, max_iter):
     train_dataset = pd.read_csv("./src/train.csv").to_numpy()
     test_dataset = pd.read_csv("./src/test.csv").to_numpy()
     test_x = test_dataset[:, :-1]
@@ -16,8 +16,7 @@ def SVMClassifier(C, kernel, degree, tol, max_iter, random_state):
     enc = preprocessing.LabelEncoder()
     enc.fit(train_y)
     train_y = enc.transform(train_y)
-    clf = svm.SVC(C=C, kernel=kernel, degree=degree, tol=tol,
-                  max_iter=max_iter, random_state=random_state)
+    clf = svm.SVC(C=C, kernel=kernel, tol=tol, max_iter=max_iter)
     clf.fit(train_x, train_y)
     y_pred = clf.predict(test_x)
     dump(enc, "./src/encoder.model")

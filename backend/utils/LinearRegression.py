@@ -4,14 +4,14 @@ from sklearn.metrics import mean_absolute_percentage_error
 from joblib import dump, load
 import pandas as pd
 
-def LinearRegression(loss, max_iter, shuffle, random_state, tol, penalty, alpha):
+def LinearRegression(loss, max_iter, shuffle, tol):
     train_dataset = pd.read_csv("./src/train.csv").to_numpy()
     test_dataset = pd.read_csv("./src/test.csv").to_numpy()
     test_x = test_dataset[:, :-1]
     test_y = test_dataset[:, -1]
     train_x = train_dataset[:, :-1]
     train_y = train_dataset[:, -1]
-    clf = linear_model.SGDRegressor(loss=loss, penalty=penalty, alpha=alpha, max_iter=max_iter, tol=tol, shuffle=shuffle, random_state=random_state)
+    clf = linear_model.SGDRegressor(loss=loss, max_iter=max_iter, tol=tol, shuffle=shuffle)
     clf.fit(train_x, train_y)
     y_pred = clf.predict(test_x)
     dump(clf, "./src/model.model")
