@@ -1,0 +1,129 @@
+{
+    "options_1": [
+        {
+            "value": 1,
+            "label": "zero padding",
+            "description": "将缺省数据全部填充为0",
+            "score": 1,
+            "image": null
+        },
+        {
+            "value": 2,
+            "label": "mean padding",
+            "description": "将缺省数据全部填充为该列剩余数据的平均值",
+            "score": 4,
+            "image": "mean.gif"
+        },
+        {
+            "value": 3,
+            "label": "median padding",
+            "description": "将缺省数据全部填充为该列剩余数据的中位数",
+            "score": 3,
+            "image": "median.gif"
+        },
+        {
+            "value": 4,
+            "label": "knn classifier padding",
+            "description": "使用不含缺省值的列作为输入，使用KNN算法分类预测缺省项",
+            "score": 4,
+            "image": "knn.gif"
+        },
+        {
+            "value": 5,
+            "label": "knn regressor padding",
+            "description": "使用不含缺省值的列作为输入，使用KNN算法回归预测缺省项",
+            "score": 4,
+            "image": "knn.gif"
+        },
+        {
+            "value": 6,
+            "label": "random forest classifier padding",
+            "description": "使用不含缺省值的列作为输入，使用随机森林算法分类预测缺省项",
+            "score": 5,
+            "image": "forest.gif"
+        },
+        {
+            "value": 7,
+            "label": "random forest regressor padding",
+            "description": "使用不含缺省值的列作为输入，使用随机森林算法回归预测缺省项",
+            "score": 5,
+            "image": "forest.gif"
+        }
+    ],
+    "options_2": [
+        {
+            "value": 1,
+            "label": "minmax norm",
+            "description": "(x - min) / (max - min)",
+            "score": 4,
+            "image": "minmax.gif"
+        },
+        {
+            "value": 2,
+            "label": "z-score norm",
+            "description": "(x - mu) / sigma",
+            "score": 5,
+            "image": "zscore.gif"
+        },
+        {
+            "value": 3,
+            "label": "sigmoid norm",
+            "description": "1 / (1 + e^-x)",
+            "score": 3,
+            "image": "sigmoid.gif"
+        },
+        {
+            "value": 4,
+            "label": "log10 norm",
+            "description": "log10(x) / log10(max)",
+            "score": 2,
+            "image": null
+        },
+        {
+            "value": 5,
+            "label": "l2 vector norm",
+            "description": "x / ||x||",
+            "score": 1,
+            "image": null
+        }
+    ],
+    "options_3": [
+        {
+            "value": 1,
+            "label": "MAD sifting",
+            "description": "使用MAD计算偏差值，并将偏差值在设定的门槛外的数据剔除",
+            "score": 3,
+            "image": null
+        },
+        {
+            "value": 2,
+            "label": "DBSCAN sifting",
+            "description": "使用DBSCAN做移动近邻检测，并将在设定的检测半径之外的数据剔除",
+            "score": 4,
+            "image": "dbscan.png"
+        },
+        {
+            "value": 3,
+            "label": "Isolation Forest sifting",
+            "description": "使用孤立森林算法做分割计算，剔除容易孤立出的点",
+            "score": 5,
+            "image": "if.png"
+        }
+    ],
+    "options_4": [
+        {
+            "value": 1,
+            "label": "Pearson Correlation feature selection",
+            "description": "使用Pearson相关系数对单列相关性进行排序。-1表示完全线性负相关，0表示无关，1表示完全线性正相关",
+            "score": 2,
+            "image": null
+        },
+        {
+            "value": 2,
+            "label": "Random Forest Regressor feature selection",
+            "description": "使用随机森林算法进行5折交叉验证，对最终得分进行排序",
+            "score": 4,
+            "image": null
+        }
+    ]
+}

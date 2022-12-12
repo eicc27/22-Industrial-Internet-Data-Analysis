@@ -4,8 +4,17 @@ from utils.DecisionTree import DecisionTreeClassifier, DecisionTreeClassifierPre
 from utils.LinearRegression import LinearRegression, LinearRegressionPredict
 from utils.SVMClassifier import SVMClassifier, SVMClassifierPredict
 from flask import send_from_directory
+import json
 app = Flask(__name__)
 CORS(app, resources=r'/*')
+
+@app.route("/preproc_intro", methods=['GET'])
+def intro():
+    return jsonify(json.load(open('./intro.json', 'r')))
+
+@app.route("/preproc", methods=['POST'])
+def preproc():
+    pass #todo
 
 @app.route("/linearRegression", methods=['POST'])
 def linearReg():
