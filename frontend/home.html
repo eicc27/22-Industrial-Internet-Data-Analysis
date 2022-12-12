@@ -103,12 +103,14 @@
                     </div>
                 </el-row>
                 <!-- 2.4单列相关系数统计算法end -->
-                <!-- 2.算法选择end -->
+                
                 <el-footer>
                     <el-button type="primary" round v-on:click="turnToPrevStep(2)">上一步</el-button>
                     <el-button type="primary" round v-on:click="turnToNextStep(2);wait_train()">开始训练</el-button>
                 </el-footer>
             </div>
+            <!-- 2.算法选择end -->
+            <!-- 3.输出模型-->
             <div class="block" v-if="visibleStep[3].visible">
                 <el-button type="primary" round v-on:click="download">点击下载模型</el-button>
                 <el-button type="primary" round v-on:click="turnToNextStep(3)">以此模型进行数据预测</el-button>
@@ -117,6 +119,8 @@
                     <el-button type="primary" round v-on:click="turnToStep0(3)">重新开始</el-button>
                 </el-footer>
             </div>
+            <!-- 3.输出模型end-->
+            <!-- 4.上传预测文件-->
             <div class="block" v-if="visibleStep[4].visible">
                 <el-row>
                     <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
@@ -133,6 +137,8 @@
                     <el-button type="primary" round v-on:click="turnToStep0(4)">重新开始</el-button>
                 </el-footer>
             </div>
+            <!-- 4.上传预测文件end-->
+            <!-- 5.预测结果及下载-->
             <div class="block" v-if="visibleStep[5].visible">
                 <el-button type="primary" round v-on:click="download">点击下载预测结果</el-button>
                 <el-button type="primary" round v-on:click="showChart">查看预测结果</el-button>
@@ -141,6 +147,7 @@
                     <el-button type="primary" round v-on:click="turnToStep0(5)">重新开始</el-button>
                 </el-footer>
             </div>
+            <!-- 5.预测结果及下载end-->
         </el-container>
     </div>
 </body>
@@ -156,13 +163,13 @@
                     value: 1,
                     label: 'zero',
                     description: 'zero算法是...(可能会有图,要预留空间)',
-                    score: '',
+                    score: 5,
                     image: ''
                 }, {
                     value: 2,
                     label: 'mean',
                     description: 'mean算法是...',
-                    score: '',
+                    score: 4,
                     image: ''
                 }],
                 value_1: '',
