@@ -52,13 +52,13 @@
     <div id="app">
         <el-container>
             <el-header> 
-                <h1>房价数据分析和预测</h1>
+                <h1>通用数据分析和预测</h1>
             </el-header>
             <el-main>
                 <!-- 0.欢迎界面 -->
-                <div class="block" v-if="visibleStep[0].visible">
+                <div class="block" v-if="visibleStep[0].visible" style="border-radius:0;box-shadow:0 0 0 ">
                     <el-row>
-                        利用房价数据为您精准预测房价，<del>没有中间商赚差价</del>
+                        welcome
                     </el-row>
                     <el-row type="flex" justify="center">
                         <el-button type="primary" round v-on:click="turnToNextStep(0)">开始</el-button>
@@ -93,11 +93,20 @@
                         <div>缺失值处理</div>
                         <el-select v-model="value_1" placeholder="请选择">
                             <el-option v-for="item in options_1" :key="item.value" :label="item.label" :value="item.value">
+                                <el-popover
+                                    placement="left"
+                                    :title="item.label"
+                                    width="350"
+                                    trigger="hover"
+                                    :content="item.description">
+                                    <p> {{item.description}} </p>
+                                    <img :src="item.image" width="300"/>
+                                    <el-button slot="reference" type="text" style="width:100%;color:black;">
+                                        <span>{{item.label}}</span>
+                                    </el-button>
+                                </el-popover> 
                             </el-option>
                         </el-select>
-                        <div v-if="value_1">
-                            {{options_1[value_1-1].description}}
-                        </div>
                     </el-row>
                     <!-- 2.1缺失值处理end -->
                     <!-- 2.2归一化方法 -->
@@ -105,11 +114,20 @@
                         <div>归一化方法</div>
                         <el-select v-model="value_2" placeholder="请选择">
                             <el-option v-for="item in options_2" :key="item.value" :label="item.label" :value="item.value">
+                                <el-popover
+                                    placement="right"
+                                    :title="item.label"
+                                    width="350"
+                                    trigger="hover"
+                                    :content="item.description">
+                                    <p> {{item.description}} </p>
+                                    <img :src="item.image" width="300"/>
+                                    <el-button slot="reference" type="text" style="width:100%;color:black;">
+                                        <span>{{item.label}}</span>
+                                    </el-button>
+                                </el-popover> 
                             </el-option>
                         </el-select>
-                        <div v-if="value_2">
-                            {{options_2[value_2-1].description}}
-                        </div>
                     </el-row>
                     <!-- 2.2归一化方法end -->
                     <!-- 2.3数据筛选算法 -->
@@ -117,23 +135,41 @@
                         <div>数据筛选算法</div>
                         <el-select v-model="value_3" placeholder="请选择">
                             <el-option v-for="item in options_3" :key="item.value" :label="item.label" :value="item.value">
+                                <el-popover
+                                    placement="left"
+                                    :title="item.label"
+                                    width="350"
+                                    trigger="hover"
+                                    :content="item.description">
+                                    <p> {{item.description}} </p>
+                                    <img :src="item.image" width="300"/>
+                                    <el-button slot="reference" type="text" style="width:100%;color:black;">
+                                        <span>{{item.label}}</span>
+                                    </el-button>
+                                </el-popover> 
                             </el-option>
                         </el-select>
-                        <div v-if="value_3">
-                            {{options_3[value_3-1].description}}
-                        </div>
                     </el-row>
                     <!-- 2.3数据筛选算法end -->
                     <!-- 2.4单列相关系数统计算法 -->
                     <el-row>
-                        <div>单列相关系数统计算法</div>
-                        <el-select v-model="value_4" placeholder="请选择">
+                        <div>单列相关系数统计算法</div>                        
+                        <el-select v-model="value_4" placeholder="请选择">      
                             <el-option v-for="item in options_4" :key="item.value" :label="item.label" :value="item.value">
-                            </el-option>
+                                <el-popover
+                                    placement="right"
+                                    :title="item.label"
+                                    width="350"
+                                    trigger="hover"
+                                    :content="item.description">
+                                    <p> {{item.description}} </p>
+                                    <img :src="item.image" width="300"/>
+                                    <el-button slot="reference" type="text" style="width:100%;color:black;">
+                                        <span>{{item.label}}</span>
+                                    </el-button>
+                                </el-popover>    
+                            </el-option>                                
                         </el-select>
-                        <div v-if="value_4">
-                            {{options_4[value_4-1].description}}
-                        </div>
                     </el-row>
                     <!-- 2.4单列相关系数统计算法end -->
                     
@@ -208,9 +244,9 @@
                 options_1: [{
                     value: 1,
                     label: 'zero',
-                    description: 'zero算法是...(可能会有图,要预留空间)',
+                    description: 'zero算法是...(可能会有图,要预留空间,图片是测试用的)',
                     score: 5,
-                    image: ''
+                    image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
                 }, {
                     value: 2,
                     label: 'mean',
