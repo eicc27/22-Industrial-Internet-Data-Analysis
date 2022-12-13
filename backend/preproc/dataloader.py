@@ -1,4 +1,4 @@
-from logger import Logger
+from preproc.logger import Logger
 import pandas as pd
 from typing import Callable
 
@@ -37,6 +37,7 @@ class Dataloader:
             result: pd.DataFrame = reader_function(self.fpath)
         except ValueError:
             Logger(f"READ ERROR: cannot read file {self.fpath}.").log('error')
+            raise ValueError()
         Logger(f"Loaded dataset in {self.fpath}, head & first 2 rows:").log('ok')
         print(result.columns)
         print(result.head(2))

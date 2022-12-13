@@ -1,5 +1,8 @@
 import numpy as np
-
+import hashlib
+import time
+import pandas as pd
+import os
 
 class Utils:
     def dim(data: np.ndarray):
@@ -52,3 +55,17 @@ class Utils:
                 X.append(np.delete(row, target))
                 y.append(row[target])
         return np.array(X), np.array(y), np.array(pred_data)
+
+    def strs_to_csv(fname: str):
+        with open(fname, 'r') as f:
+            _lines = f.readlines()
+        with open(fname, 'w') as f:
+            lines = [line[1:-2] + '\n' for line in _lines]
+            f.writelines(lines)
+        
+
+    def gen_fname(fname: str):
+        ext = fname.split('.')[-1]
+        s = str(time.time()) + fname
+        encrypted = hashlib.md5(bytes(s, encoding='utf-8')).hexdigest()
+        return f'{encrypted[:8]}.{ext}'

@@ -90,20 +90,13 @@
     "options_3": [
         {
             "value": 1,
-            "label": "MAD sifting",
-            "description": "使用MAD计算偏差值，并将偏差值在设定的门槛外的数据剔除",
-            "score": 3,
-            "image": null
-        },
-        {
-            "value": 2,
             "label": "DBSCAN sifting",
             "description": "使用DBSCAN做移动近邻检测，并将在设定的检测半径之外的数据剔除",
             "score": 4,
             "image": "dbscan.png"
         },
         {
-            "value": 3,
+            "value": 2,
             "label": "Isolation Forest sifting",
             "description": "使用孤立森林算法做分割计算，剔除容易孤立出的点",
             "score": 5,

@@ -1,11 +1,11 @@
 import numpy as np
 from typing import Literal
-from utilities import Utils
+from preproc.utilities import Utils
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
-from logger import Logger
+from preproc.logger import Logger
 
 PaddingMethods = Literal['zero', 'mean', 'median',
                          'knnc', 'knnr', 'forestc', 'forestr']
@@ -62,18 +62,21 @@ class Padding:
             case '_':  # internal error while passing params
                 Logger(f'Invalid padding method specified: {self.method}.').log(
                     'error')
-                exit(1)
+                raise ValueError
 
     def _zero_padding(self):
         self.column[np.isnan(self.column)] = 0
+        self.data[:, self.column_index] = self.column
         return self.data
 
     def _mean_padding(self):
-        self.column[np.isnan(self.column)] = self.column.mean
+        self.column[np.isnan(self.column)] = self.column[np.logical_not(np.isnan(self.column))].mean()
+        self.data[:, self.column_index] = self.column
         return self.data
 
     def _median_padding(self):
-        self.column[np.isnan(self.column)] = np.median(self.column)
+        self.column[np.isnan(self.column)] = np.median(self.column[np.logical_not(np.isnan(self.column))])
+        self.data[:, self.column_index] = self.column
         return self.data
 
     def _knnc_padding(self):

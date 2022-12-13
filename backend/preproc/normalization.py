@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Literal
 
-from logger import Logger
+from preproc.logger import Logger
 
 NormMethods = Literal['minmax', 'zscore', 'sigmoid', 'log', 'l2']
 
@@ -41,7 +41,7 @@ class Norm:
                 return self._l2_norm()
             case _: # internal error while passing params
                 Logger(f'Invalid norm method specified: {self.method}.').log('error')
-                exit(1)
+                raise ValueError()
 
     def _minmax_norm(self):
         maxval = np.max(self.column)

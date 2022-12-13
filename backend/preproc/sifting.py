@@ -3,7 +3,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.ensemble import IsolationForest
 from typing import Literal
 
-from logger import Logger
+from preproc.logger import Logger
 
 
 class Sifting:
@@ -30,8 +30,8 @@ class Sifting:
         Job dispatcher for different sifting methods.
         '''
         match self.method:
-            case 'mad':
-                return self._mad_sifting()
+            # case 'mad':
+            #     return self._mad_sifting()
             case 'dbscan':
                 return self._dbscan_sifting()
             case 'if':
@@ -39,7 +39,7 @@ class Sifting:
             case _:
                 Logger(f'Invalid sifting method specified: {self.method}.').log(
                     'error')
-                exit(1)
+                raise ValueError 
 
     def _mad_sifting(self):
         mad_column = np.abs(self.column - np.median(self.column))
@@ -48,7 +48,7 @@ class Sifting:
         return self.data
 
     def _dbscan_sifting(self):
-        dbscan = DBSCAN(eps=self.threshold).fit(self.data)
+        dbscan = DBSCAN(eps=self.threshold).fit(self.data[:, :-1])
         sifting_row = dbscan.labels_ > 0
         self.data = self.data[sifting_row]
         return self.data
@@ -56,6 +56,6 @@ class Sifting:
     def _if_sifting(self):
         forest = IsolationForest(
             contamination=self.threshold if self.threshold else 'auto')
-        sifting_row = forest.fit_predict(self.data) > 0
+        sifting_row = forest.fit_predict(self.data[:, :-1]) > 0
         self.data = self.data[sifting_row]
         return self.data

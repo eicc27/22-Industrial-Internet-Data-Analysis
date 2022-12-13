@@ -1,10 +1,11 @@
 import numpy as np
 from typing import Literal
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, ShuffleSplit
 from sklearn.feature_selection import f_regression
+import matplotlib.pyplot as plt
 
-from logger import Logger
+from preproc.logger import Logger
 
 
 class FeatureSelection:
@@ -36,7 +37,7 @@ class FeatureSelection:
                 return self._pearson_fs()
             case _:
                 Logger(f'Unknown method: {self.method}').log('error')
-                exit(1)
+                raise ValueError()
 
     def _pearson_fs(self):
         pv = f_regression(self.data, self.target)[1]
@@ -46,14 +47,24 @@ class FeatureSelection:
         return sorted(retval, key=lambda k: k[1], reverse=True)
 
     def _forest_fs(self):
-        fr = RandomForestRegressor()
+        fr = RandomForestRegressor(n_estimators=30, max_depth=5)
         scores = []
         _, columns = self.data.shape
         for col in range(columns):
             column = self.data[:, col]
-            score = cross_val_score(fr, column.reshape(-1, 1), self.target,)[-1]
+            score = cross_val_score(fr, column.reshape(-1, 1), self.target, scoring='r2', cv=ShuffleSplit())
+            score = np.mean(score)
             scores.append(score)
         retval = []
         for label, score in zip(self.labels, scores):
             retval.append((label, score))
         return sorted(retval, key=lambda k: k[1], reverse=True)
+
+    def savefig(self):
+        result = self.run()
+        print(result)
+        plt.clf()
+        for r in result:
+            plt.barh(r[0], r[1], color='orange')
+        plt.title('Correlation value of labels')
+        plt.savefig('./src/fs.png')

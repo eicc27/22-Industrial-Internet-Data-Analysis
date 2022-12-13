@@ -4,17 +4,118 @@ from utils.DecisionTree import DecisionTreeClassifier, DecisionTreeClassifierPre
 from utils.LinearRegression import LinearRegression, LinearRegressionPredict
 from utils.SVMClassifier import SVMClassifier, SVMClassifierPredict
 from flask import send_from_directory
+import numpy as np
+import pandas as pd
 import json
+import os
+import sys
+sys.path.append(os.path.abspath('.'))
+
+from preproc.feature_selection import FeatureSelection
+from preproc.sifting import Sifting
+from preproc.normalization import Norm
+from preproc.padding import Padding
+from preproc.dataloader import Dataloader
+from preproc.utilities import Utils
+
+
 app = Flask(__name__)
 CORS(app, resources=r'/*')
+
 
 @app.route("/preproc_intro", methods=['GET'])
 def intro():
     return jsonify(json.load(open('./intro.json', 'r')))
 
-@app.route("/preproc", methods=['POST'])
+
+@app.route("/upload", methods=['POST'])
+def upload():
+    try:
+        file = request.files.get("file")
+        file.save("./src/data.csv")
+        Utils.strs_to_csv("./src/data.csv")
+    except:
+        return jsonify({
+            'code': 400,
+            'msg': "文件接收失败"
+        })
+    return jsonify({
+        'code': 200,
+        'msg': "文件上传成功"
+    })
+
+
+@app.route("/preproc", methods=['post'])
 def preproc():
-    pass #todo
+    try:
+        data = Dataloader('./src/data.csv').load()
+        labels = data.columns.values
+        data = data.to_numpy()
+    except ValueError:
+        return jsonify({
+            'code': 400,
+            'msg': "文件读取失败"
+        })
+    req: dict = json.loads(request.get_data(as_text=True))
+    pred = data[:, [req['pred_column']]]
+    data_p = data[:, req['data_columns']]
+    data = np.concatenate([data_p, pred], axis=1)
+    labels_p = []
+    for c in req['data_columns']:
+        labels_p.append(labels[c])
+    labels_p.append(labels[req['pred_column']])
+    if req['padding']:
+        for i, padding in enumerate(req['padding']):
+            if padding:
+                try:
+                    print(i)
+                    data = Padding(data, i, padding).run()
+                except ValueError:
+                    return jsonify({
+                        'code': 400,
+                        'msg': "padding算法出错"
+                    })
+    pd.DataFrame(data).to_csv('./d.csv')
+    if req['norm']:
+        for i, norm in enumerate(req['norm']):
+            if norm:
+                try:
+                    data = Norm(data, i, norm).run()
+                except ValueError:
+                    return jsonify({
+                        'code': 400,
+                        'msg': "norm算法出错"
+                    })
+    if req['sifting']:
+        try:
+            print(req['sifting']['method'])
+            data = Sifting(data, req['sifting']['method'], -1, req['sifting']['th']).run()
+        except ValueError as e:
+                    print(e)
+                    return jsonify({
+                        'code': 400,
+                        'msg': "sift算法出错"
+                    })
+    df = pd.DataFrame(data, columns=labels_p)
+    df.to_csv('./src/data_preproc.csv', index=False)
+    return send_from_directory('./src', 'data_preproc.csv')
+
+@app.route('/fs', methods=['POST'])
+def feature_selection():
+    req: dict = json.loads(request.get_data(as_text=True))
+    dl = Dataloader('./src/data_preproc.csv').load()
+    data = dl.to_numpy()
+    labels = dl.columns.values
+    try:
+        FeatureSelection(data[:, :-1], labels[:-1], data[:, -1], req['method']).savefig()
+    except ValueError:
+        return jsonify({
+                        'code': 400,
+                        'msg': "fs算法出错"
+                    })
+    return send_from_directory('./src', 'fs.png')
+
+
 
 @app.route("/linearRegression", methods=['POST'])
 def linearReg():
@@ -46,14 +147,13 @@ def linearReg():
         return jsonify({
             'code': 200,
             'msg': "训练成功",
-            'error' : error
+            'error': error
         })
     except:
         return jsonify({
             'code': 402,
             'msg': "训练失败"
         })
-
 
 
 @app.route("/decisionTreeClassfier", methods=['POST'])
@@ -92,6 +192,7 @@ def decisionTree():
             'code': 402,
             'msg': "训练失败"
         })
+
 
 @app.route("/SVMClassifier", methods=['POST'])
 def SVM():
@@ -198,7 +299,6 @@ def getEncoderModel():
 # @app.route("/getResult", methods=['POST'])
 # def getResult():
 #     return send_from_directory('./src', 'result.csv')
-
 
 
 if __name__ == '__main__':
