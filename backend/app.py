@@ -73,7 +73,8 @@ def preproc():
                 except ValueError:
                     return jsonify({
                         'code': 400,
-                        'msg': "padding算法出错"
+                        'msg': "padding算法出错",
+                        'column_index': i
                     })
     pd.DataFrame(data).to_csv('./d.csv')
     if req['norm']:
@@ -84,7 +85,8 @@ def preproc():
                 except ValueError:
                     return jsonify({
                         'code': 400,
-                        'msg': "norm算法出错"
+                        'msg': "norm算法出错",
+                        'column_index': i
                     })
     if req['sifting']:
         try:
@@ -106,12 +108,18 @@ def feature_selection():
     dl = Dataloader('./src/data_preproc.csv').load()
     data = dl.to_numpy()
     labels = dl.columns.values
+    pred = data[:, [req['pred_column']]]
+    data_p = data[:, req['data_columns']]
+    data = np.concatenate([data_p, pred], axis=1)
+    labels_p = []
+    for c in req['data_columns']:
+        labels_p.append(labels[c])
     try:
-        FeatureSelection(data[:, :-1], labels[:-1], data[:, -1], req['method']).savefig()
+        FeatureSelection(data[:, :-1], labels_p, data[:, -1], req['method']).savefig()
     except ValueError:
         return jsonify({
                         'code': 400,
-                        'msg': "fs算法出错"
+                        'msg': "fs算法出错",
                     })
     return send_from_directory('./src', 'fs.png')
 
