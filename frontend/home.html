@@ -13,37 +13,52 @@
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <title>数据分析</title>
     <style>
-        body, html, #app{
+        body,
+        html,
+        #app {
             margin: 0 0;
-            height:100%;
+            height: 100%;
         }
-        .el-container{
+
+        .el-container {
             margin: 0 auto;
-            height:100%;
+            height: 100%;
         }
-        
-        .el-header, .el-footer{
+
+        .el-header,
+        .el-footer {
             margin: 0 auto;
             width: 100%;
-            background-color:rgba(0, 204, 255, 0.15);
-            text-align: center;
 
+            text-align: center;
         }
-        .el-main{
+
+
+        .el-main {
             margin: 0 auto;
-            width: auto;
+            width: 100%;
+            padding: 2px 2px;
         }
+
         .block {
-            display: inline-table;
-            margin: 0 auto;
-            width: auto;
+            margin: auto auto;
+            width: 60%;
+            height: 90%;
             padding: 20px 20px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 6px rgba(0, 0, 0, 0.08);
-      }
+        }
 
         .el-row {
             margin-bottom: 20px;
+        }
+
+        .el-form-item {
+            margin-bottom: 0px;
+        }
+
+        .el-form-item__content {
+            display: flex;
         }
     </style>
 </head>
@@ -51,7 +66,7 @@
 <body>
     <div id="app">
         <el-container>
-            <el-header> 
+            <el-header style="background-color: rgba(0, 204, 255, 0.15);">
                 <h1>数据分析和预测</h1>
             </el-header>
             <el-main>
@@ -67,116 +82,137 @@
                 <!-- 0.欢迎界面end -->
                 <!-- 1.训练数据上传 -->
                 <div class="block" v-if="visibleStep[1].visible">
-                    <el-row>1、上传训练数据集</el-row>
-                    <el-row>
-                        <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
-                            ref="upload" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload" name="train.csv"
-                            :auto-upload="false" :on-success="handleUploadSuccess" :limit="1">
-                            <i class="el-icon-upload">训练数据</i>
-                            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-                        </el-upload>
-                        <el-row type="flex" justify="center">
-                            <el-button type="primary" round v-on:click="upload">确认上传</el-button>
-                        </el-row>
-                    </el-row>
-                    <el-row type="flex" justify="center">
-                        <el-button type="primary" round v-on:click="turnToPrevStep(1)">上一步</el-button>
-                        <el-button type="primary" round v-on:click="turnToNextStep(1);algorithm_get()">下一步</el-button>
-                    </el-row>
+                    <el-container>
+                        <el-header>
+                            1、上传训练数据集并预处理
+                        </el-header>
+                        <el-main>
+                            <el-col :span="span_1">
+                                <el-row type="flex" justify="center">
+                                    <el-upload class="upload-demo" drag
+                                        action="https://jsonplaceholder.typicode.com/posts/" ref="upload" accept=".csv"
+                                        :action="uploadUrl" :before-upload="beforeUpload" name="train.csv"
+                                        :on-remove="clearPreCols" :on-success="handleUploadPreSuccess" :limit="1">
+                                        <i class="el-icon-upload">训练数据</i>
+                                        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                                    </el-upload>
+                                </el-row>
+                            </el-col>
+                            <el-col :span="span_2">
+                                <div v-if="op_vis">
+                                    <el-form ref="preprocForm" :model="preprocForm">
+                                        <el-row :gutter="2">
+                                            <el-col :span="14">
+                                                <el-form-item label="sifting method">
+                                                    <el-select v-model="preprocForm.sifting.method" @change="siftChange"
+                                                        clearable>
+                                                        <el-option v-for="method in sifting" :key="method"
+                                                            :label="method" :value="method">
+                                                        </el-option>
+                                                    </el-select>
+                                                </el-form-item>
+                                            </el-col>
+                                            <el-col :span="8">
+                                                <el-form-item label="th">
+                                                    <el-select v-model="preprocForm.sifting.th" @change="siftthChange"
+                                                        clearable :disabled="sift_th_dis">
+                                                        <el-option v-for="th in sifting_th" :key="th" :label="th"
+                                                            :value="th">
+                                                        </el-option>
+                                                    </el-select>
+                                                </el-form-item>
+                                            </el-col>
+                                        </el-row>
+                                        <el-row :gutter="2">
+                                            <el-col :span="11">
+                                                <el-form-item label="运算列">
+                                                    <el-select v-model="preprocForm.data_col" collapse-tags multiple
+                                                        placeholder="选择参与运算的数据" @change="opChange">
+                                                        <el-option v-for="(col,index) in options_col" :key="index"
+                                                            :label="col" :value="index">
+                                                        </el-option>
+                                                    </el-select>
+                                                </el-form-item>
+                                            </el-col>
+                                            <el-col :span="11">
+                                                <el-form-item label="预测列">
+                                                    <el-select v-model="preprocForm.pred_col" :disabled="pred_col_dis">
+                                                        <el-option v-for="(col,index) in options_pred" :key="index"
+                                                            :label="col" :value="index">
+                                                        </el-option>
+                                                    </el-select>
+                                                </el-form-item>
+                                            </el-col>
+                                        </el-row>
+                                        <el-row>
+                                            <el-form-item v-for="(col,index) in preprocForm.data_col"
+                                                :label="options_col[col]" :key="col">
+                                                <el-row :gutter="2">
+                                                    <el-col :span="11">
+                                                        <el-select v-model="preprocForm.dir_p_n[col][0]" clearable
+                                                            @change="$forceUpdate()" placeholder="padding">
+                                                            <el-option v-for="item in padding" :key="item" :label="item"
+                                                                :value="item">
+                                                            </el-option>
+                                                        </el-select>
+                                                    </el-col>
+                                                    <el-col :span="11">
+                                                        <el-select v-model="preprocForm.dir_p_n[col][1]" clearable
+                                                            @change="$forceUpdate()" placeholder="norm">
+                                                            <el-option v-for="item in norm" :key="item" :label="item"
+                                                                :value="item">
+                                                            </el-option>
+                                                        </el-select>
+                                                    </el-col>
+                                                </el-row>
+                                            </el-form-item>
+                                        </el-row>
+                                    </el-form>
+                                </div>
+                            </el-col>
+                        </el-main>
+                        <el-footer>
+                            <el-row type="flex" justify="center">
+                                <el-button type="primary" round v-on:click="turnToPrevStep(1)">上一步</el-button>
+                                <el-button type="primary" round v-on:click="uploadPre">确认上传</el-button>
+                            </el-row>
+                        </el-footer>
+                    </el-container>
                 </div>
                 <!-- 1.训练数据上传end -->
                 <!-- 2.算法选择 -->
                 <div class="block" v-if="visibleStep[2].visible">
-                    <el-row>2、选择训练算法</el-row>
-                    <!-- 2.1缺失值处理 -->
-                    <el-row>
-                        <div>缺失值处理</div>
-                        <el-select v-model="value_1" placeholder="请选择">
-                            <el-option v-for="item in options_1" :key="item.value" :label="item.label" :value="item.value">
-                                <el-popover
-                                    placement="left-start"
-                                    :title="item.label"
-                                    width="350"
-                                    trigger="hover"
-                                    :content="item.description">
-                                    <p> {{item.description}} </p>
-                                    <img :src="item.image" width="300"/>
-                                    <el-button slot="reference" type="text" style="width:100%;color:black;">
-                                        <span>{{item.label}}</span>
-                                    </el-button>
-                                </el-popover> 
-                            </el-option>
-                        </el-select>
-                    </el-row>
-                    <!-- 2.1缺失值处理end -->
-                    <!-- 2.2归一化方法 -->
-                    <el-row>
-                        <div>归一化方法</div>
-                        <el-select v-model="value_2" placeholder="请选择">
-                            <el-option v-for="item in options_2" :key="item.value" :label="item.label" :value="item.value">
-                                <el-popover
-                                    placement="right-start"
-                                    :title="item.label"
-                                    width="350"
-                                    trigger="hover"
-                                    :content="item.description">
-                                    <p> {{item.description}} </p>
-                                    <img :src="item.image" width="300"/>
-                                    <el-button slot="reference" type="text" style="width:100%;color:black;">
-                                        <span>{{item.label}}</span>
-                                    </el-button>
-                                </el-popover> 
-                            </el-option>
-                        </el-select>
-                    </el-row>
-                    <!-- 2.2归一化方法end -->
-                    <!-- 2.3数据筛选算法 -->
-                    <el-row>
-                        <div>数据筛选算法</div>
-                        <el-select v-model="value_3" placeholder="请选择">
-                            <el-option v-for="item in options_3" :key="item.value" :label="item.label" :value="item.value">
-                                <el-popover
-                                    placement="left-start"
-                                    :title="item.label"
-                                    width="350"
-                                    trigger="hover"
-                                    :content="item.description">
-                                    <p> {{item.description}} </p>
-                                    <img :src="item.image" width="300"/>
-                                    <el-button slot="reference" type="text" style="width:100%;color:black;">
-                                        <span>{{item.label}}</span>
-                                    </el-button>
-                                </el-popover> 
-                            </el-option>
-                        </el-select>
-                    </el-row>
-                    <!-- 2.3数据筛选算法end -->
-                    <!-- 2.4单列相关系数统计算法 -->
-                    <el-row>
-                        <div>单列相关系数统计算法</div>                        
-                        <el-select v-model="value_4" placeholder="请选择">      
-                            <el-option v-for="item in options_4" :key="item.value" :label="item.label" :value="item.value">
-                                <el-popover
-                                    placement="right-end"
-                                    :title="item.label"
-                                    width="350"
-                                    trigger="hover"
-                                    :content="item.description">
-                                    <p> {{item.description}} </p>
-                                    <img :src="item.image" width="300"/>
-                                    <el-button slot="reference" type="text" style="width:100%;color:black;">
-                                        <span>{{item.label}}</span>
-                                    </el-button>
-                                </el-popover>    
-                            </el-option>                                
-                        </el-select>
-                    </el-row>
-                    <!-- 2.4单列相关系数统计算法end -->
-                    
-                    <el-row type="flex" justify="center">
-                        <el-button type="primary" round v-on:click="turnToPrevStep(2)">上一步</el-button>
-                        <el-button type="primary" round v-on:click="turnToNextStep(2);wait_train()">开始训练</el-button>
-                    </el-row>
+                    <el-container>
+                        <el-header>
+                            2、选择训练算法
+                        </el-header>
+                        <el-main>
+                            <el-form ref="algorithmForm" :model="algorithmForm">
+                                <el-form-item label="训练算法">
+                                    <el-select v-model="algorithmForm.algorithm" placeholder="请选择">
+                                        <el-option v-for="item in options_alg" :key="item.value" :label="item.label"
+                                            :value="item.value">
+                                            <el-popover placement="left-start" :title="item.label" width="350"
+                                                trigger="hover" :content="item.description">
+                                                <p> {{item.description}} </p>
+                                                <img :src="item.image" width="300" />
+                                                <el-button slot="reference" type="text" style="width:100%;color:black;">
+                                                    <span>{{item.label}}</span>
+                                                </el-button>
+                                            </el-popover>
+                                        </el-option>
+                                    </el-select>
+                                </el-form-item>
+                            </el-form>
+                        </el-main>
+                        <el-footer>
+                            <el-row type="flex" justify="center">
+                                <el-button type="primary" round v-on:click="turnToPrevStep(2)">上一步</el-button>
+                                <el-button type="primary" round
+                                    v-on:click="turnToNextStep(2);wait_train()">开始训练</el-button>
+                            </el-row>
+                        </el-footer>
+                    </el-container>
                 </div>
                 <!-- 2.算法选择end -->
                 <!-- 3.输出模型-->
@@ -197,8 +233,8 @@
                     <el-row>4、上传预测文件</el-row>
                     <el-row>
                         <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
-                            ref="upload" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload" name="predict.csv"
-                            :auto-upload="false" :on-success="handleUploadSuccess" :limit="1">
+                            ref="upload" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload"
+                            name="predict.csv" :auto-upload="false" :on-success="handleUploadSuccess" :limit="1">
                             <i class="el-icon-upload">预测数据</i>
                             <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                         </el-upload>
@@ -227,7 +263,7 @@
                 </div>
                 <!-- 5.预测结果及下载end-->
             </el-main>
-            <el-footer>
+            <el-footer style="background-color: rgba(0, 204, 255, 0.15);">
                 <h3></h3>
             </el-footer>
         </el-container>
@@ -239,50 +275,6 @@
         data() {
             return {
                 fileList: [],
-                //score用来存储推荐程度
-                //缺失值处理
-                options_1: [{
-                    value: 1,
-                    label: 'zero',
-                    description: 'zero算法是...(可能会有图,要预留空间,图片是测试用的)',
-                    score: 5,
-                    image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
-                }, {
-                    value: 2,
-                    label: 'mean',
-                    description: 'mean算法是...',
-                    score: 4,
-                    image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
-                }],
-                value_1: '',
-                //归一化方法
-                options_2: [{
-                    value: 1,
-                    label: 'minmax',
-                    description: 'minmax算法是...',
-                    score: '',
-                    image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
-                }],
-                value_2: '',
-                //数据筛选算法
-                options_3: [{
-                    value: 1,
-                    label: 'mad',
-                    description: 'mad算法是...',
-                    score: '',
-                    image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
-                }],
-                value_3: '',
-                //单列相关系数统计算法
-                options_4: [{
-                    value: 1,
-                    label: 'forest',
-                    description: 'forest算法是...',
-                    score: '',
-                    image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
-                }],
-                value_4: '',
-
                 //进行到哪一步，哪一步可见
                 visibleStep: [
                     { visible: true, lable: 'step0' },
@@ -291,52 +283,219 @@
                     { visible: false, lable: 'step3' },
                     { visible: false, lable: 'step4' },
                     { visible: false, lable: 'step5' },
-                ]
+                ],
+                //预处理算法
+                padding: ['zero', 'mean', 'median', 'knnc', 'knnr', 'forestc', 'forestr'],
+                norm: ['minmax', 'zscore', 'sigmoid', 'log', 'l2'],
+                sifting: ['dbscan', 'if'],
+                sifting_th: ['float'],
+                //预测时选择参与运算的列和需要预测的列
+                span_1: 24,
+                span_2: 0,
+                options_col: [],
+                options_pred: [],
+                op_vis: false,
+                pred_col_dis: true,
+                sift_th_dis: true,
+                //预处理表单
+                preprocForm: {
+                    data_col: [],
+                    pred_col: '',
+                    padding: [],
+                    norm: [],
+                    dir_p_n: {},
+                    sifting: {
+                        method: '',
+                        th: null,
+                    },
+                },
+                //算法选择
+                options_alg: [{
+                    value: 1,
+                    label: 'linearRegression',
+                    description: 'linearRegression算法是...(可能会有图,要预留空间,图片是测试用的)',
+                    score: 5,
+                    image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
+                }, {
+                    value: 2,
+                    label: 'decisionTreeClassfier',
+                    description: 'decisionTreeClassfier算法是...',
+                    score: 4,
+                    image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
+                }, {
+                    value: 3,
+                    label: 'SVMClassifier',
+                    description: 'SVMClassifier算法是...',
+                    score: 4,
+                    image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
+                },
+                ],
+                //参数选择
+
+                algorithmForm: {
+                    algorithm: '',
+                    //linearRegression
+                    loss: "squared_loss",
+                    max_iter_li: 1000,
+                    shuffle: true,
+                    tol: 0.001,
+                    //decisionTreeClassfier
+                    criterion: "gini",
+                    max_depth: 1000,
+                    max_leaf_nodes: 1000,
+                    //SVMClassifier
+                    C: 1.0,
+                    kernel: "rbf",
+                    tol: 0.001,
+                    max_iter_svm: -1,
+                    //max_iter重名，表单获取完后再赋值
+                    max_iter: '',
+                },
             };
         },
         methods: {
-            handleUploadSuccess(res, file) {
-                this.$message.success('上传成功!');
+            handleUploadPreSuccess(res, file, fileList) {
+                this.$message.success('csv文件上传成功!');
+                this.getCols(file, fileList);
             },
+            handleUploadSuccess(file, fileList) {
+                this.$message.success('上传成功!');
+
+            },
+
             beforeUpload(file) {
-                const isCSV = file.type === 'text/csv';
+                const isCSV = (file.type === "application/vnd.ms-excel")
+                    || (file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
                 if (!isCSV) {
                     this.$message.error('上传文件只能是 csv 格式!');
                 }
                 return isCSV;
             },
-            upload() {
-                this.$refs.upload.submit();
+            getCols(file, fileList) {
+                let reader = new FileReader();   //先new 一个读文件的对象 FileReader
+                if (typeof FileReader === "undefined") {  //用来判断你的浏览器是否支持 FileReader
+                    this.$message.error('浏览器不支持文件读取');
+                    return;
+                }
+                reader.readAsText(file.raw);
+                reader.onload = (e) => {
+                    this.options_col = e.target.result.split('\n')[0].replace('\r', '').split(',');
+                    this.op_vis = true;
+                    this.span_1 = 12;
+                    this.span_2 = 12;
+                    this.pred_col_dis = false;
+                    for (let i = 0; i < this.options_col.length; i++) {
+                        if (i < this.options_col.length - 1) {
+                            this.preprocForm.data_col.push(i);
+                        } else {
+                            this.preprocForm.pred_col = this.options_col[i];
+                        }
+                        this.preprocForm.dir_p_n[i] = [null, null];
+                    }
+                }
+            },
+            clearPreCols() {
+                this.op_vis = false;
+                this.span_1 = 24;
+                this.span_2 = 0;
+                this.options_pred = [];
+                this.pred_col_dis = true;
+                this.sift_th_dis = true;
+                this.preprocForm = {
+                    data_col: [],
+                    pred_col: '',
+                    padding: [],
+                    norm: [],
+                    dir_p_n: {},
+                    sifting: {
+                        method: '',
+                        th: null,
+                    },
+                };
+            },
+            opChange() {
+                this.preprocForm.data_col.sort();
+                this.options_pred = [];
+                this.preprocForm.pred_col = '';
+                this.pred_col_dis = true;
+                if (!(this.preprocForm.data_col == undefined || this.preprocForm.data_col.length <= 0)) {
+                    for (let i = 0; i < this.options_col.length; i++) {
+                        if (!this.preprocForm.data_col.includes(i)) {
+                            this.options_pred.push(this.options_col[i]);
+                            if (this.preprocForm.dir_p_n[i][0] !== null) {
+                                this.preprocForm.dir_p_n[i][0] = null;
+                            }
+                            if (this.preprocForm.dir_p_n[i][1] !== null) {
+                                this.preprocForm.dir_p_n[i][1] = null;
+                            }
+                        }
+                    }
+                    if (this.options_pred.length <= 0) {
+                        this.pred_col_dis = true;
+                    } else {
+                        this.pred_col_dis = false;
+                    }
+                }
+            },
+            siftChange() {
+                if (this.preprocForm.sifting.method == "dbscan") {
+                    this.preprocForm.sifting.th = 'float';
+                    this.sift_th_dis = true;
+                } else if (this.preprocForm.sifting.method == "if") {
+                    this.preprocForm.sifting.th = '';
+                    this.sift_th_dis = false;
+                } else {
+                    this.preprocForm.sifting.th = '';
+                    this.sift_th_dis = true;
+                }
+            },
+            siftthChange() {
+                console.log("th", this.preprocForm.sifting.th);
+            },
+            uploadPre() {
+                //todo 上传preprocForm
+                //if success 保存csv
+                //else
+
+                this.turnToNextStep(1);
+                this.algorithm_get();
+            },
+            clearAll() {
+                this.clearPreCols();
             },
             turnToPrevStep(step) {
-                this.visibleStep[step-1].visible = true;
+                this.visibleStep[step - 1].visible = true;
                 this.visibleStep[step].visible = false;
+                console.log(this.preprocForm);
+                this.clearAll();
             },
             turnToNextStep(step) {
-                this.visibleStep[step+1].visible = true;
+                this.visibleStep[step + 1].visible = true;
                 this.visibleStep[step].visible = false;
+                this.clearAll();
             },
             turnToStep0(step) {
                 this.visibleStep[0].visible = true;
                 this.visibleStep[step].visible = false;
+                this.clearAll();
             },
-            wait_train(){
+            wait_train() {
                 //TODO
                 alert('training...');
             },
-            download(){
+            download() {
                 //TODO
                 alert('downloading...(要用户指定下载地址)');
             },
-            predict(){
+            predict() {
                 //TODO
                 alert('predicting...');
             },
-            algorithm_get(){
+            algorithm_get() {
                 //TODO
                 alert('algorithm_getting...');
             },
-            showChart(){
+            showChart() {
                 //TODO
                 alert('chart TODO');
             }
