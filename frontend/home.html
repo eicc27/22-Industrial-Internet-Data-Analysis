@@ -23,6 +23,7 @@
         .el-container {
             margin: 0 auto;
             height: 100%;
+            width: 100%;
         }
 
         .el-header,
@@ -33,7 +34,6 @@
             text-align: center;
         }
 
-
         .el-main {
             margin: 0 auto;
             width: 100%;
@@ -43,7 +43,7 @@
         .block {
             margin: auto auto;
             width: 60%;
-            height: 90%;
+            height: 93%;
             padding: 20px 20px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 6px rgba(0, 0, 0, 0.08);
@@ -59,6 +59,10 @@
 
         .el-form-item__content {
             display: flex;
+        }
+
+        .el-input {
+            width: auto;
         }
     </style>
 </head>
@@ -90,10 +94,10 @@
                             <el-col :span="span_1">
                                 <el-row type="flex" justify="center">
                                     <el-upload class="upload-demo" drag
-                                        action="https://jsonplaceholder.typicode.com/posts/" ref="upload" accept=".csv"
-                                        :action="uploadUrl" :before-upload="beforeUpload" name="train.csv"
+                                        action="https://jsonplaceholder.typicode.com/posts/" ref="uploadPrep"
+                                        accept=".csv" :action="uploadUrl" :before-upload="beforeUpload" name="preproc.csv"
                                         :on-remove="clearPreCols" :on-success="handleUploadPreSuccess" :limit="1">
-                                        <i class="el-icon-upload">训练数据</i>
+                                        <i class="el-icon-upload" style="font-size: 45px;">预处理数据</i>
                                         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                                     </el-upload>
                                 </el-row>
@@ -174,7 +178,9 @@
                         <el-footer>
                             <el-row type="flex" justify="center">
                                 <el-button type="primary" round v-on:click="turnToPrevStep(1)">上一步</el-button>
-                                <el-button type="primary" round v-on:click="uploadPre">确认上传</el-button>
+                                <el-button type="primary" round v-on:click="uploadPre">上传</el-button>
+                                <el-button type="primary" round
+                                    v-on:click="turnToNextStep(1);algorithm_get();">下一步</el-button>
                             </el-row>
                         </el-footer>
                     </el-container>
@@ -187,23 +193,119 @@
                             2、选择训练算法
                         </el-header>
                         <el-main>
-                            <el-form ref="algorithmForm" :model="algorithmForm">
-                                <el-form-item label="训练算法">
-                                    <el-select v-model="algorithmForm.algorithm" placeholder="请选择">
-                                        <el-option v-for="item in options_alg" :key="item.value" :label="item.label"
-                                            :value="item.value">
-                                            <el-popover placement="left-start" :title="item.label" width="350"
-                                                trigger="hover" :content="item.description">
-                                                <p> {{item.description}} </p>
-                                                <img :src="item.image" width="300" />
-                                                <el-button slot="reference" type="text" style="width:100%;color:black;">
-                                                    <span>{{item.label}}</span>
-                                                </el-button>
-                                            </el-popover>
-                                        </el-option>
-                                    </el-select>
-                                </el-form-item>
-                            </el-form>
+                            <el-col :span="12">
+                                <el-form ref="algorithmForm" :model="algorithmForm" label-width="110px">
+                                    <el-form-item label="训练算法">
+                                        <el-select v-model="algorithmForm.algorithm" placeholder="请选择"
+                                            @change="resetAlForm">
+                                            <el-option v-for="item in options_alg" :key="item.value" :label="item.label"
+                                                :value="item.value">
+                                                <el-popover placement="left-start" :title="item.label" width="350"
+                                                    trigger="hover" :content="item.description">
+                                                    <p> {{item.description}} </p>
+                                                    <img :src="item.image" width="300" />
+                                                    <el-button slot="reference" type="text"
+                                                        style="width:100%;color:black;">
+                                                        <span>{{item.label}}</span>
+                                                    </el-button>
+                                                </el-popover>
+                                            </el-option>
+                                        </el-select>
+                                    </el-form-item>
+                                    <div v-if="algorithmForm.algorithm == 'linearRegression'">
+                                        <el-form-item label="损失函数">
+                                            <el-select v-model="algorithmForm.loss">
+                                                <el-option v-for="item in loss" :key="item" :label="item" :value="item">
+                                                </el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                        <el-form-item label="最大迭代次数">
+                                            <el-input v-model="algorithmForm.max_iter_li">
+                                            </el-input>
+                                        </el-form-item>
+                                        <el-form-item label="停止的误差标准">
+                                            <el-input v-model="algorithmForm.tol">
+                                            </el-input>
+                                        </el-form-item>
+                                        <el-form-item label="是否打乱次序">
+                                            <div><!-- 用个div将Switch撑起来-->
+                                                <el-switch v-model="algorithmForm.shuffle" active-text="是"
+                                                    inactive-text="否">
+                                                </el-switch>
+                                            </div>
+                                        </el-form-item>
+                                    </div>
+                                    <div v-if="algorithmForm.algorithm == 'decisionTreeClassfier'">
+                                        <el-form-item label="分裂选择评估">
+                                            <el-select v-model="algorithmForm.criterion">
+                                                <el-option v-for="item in criterion" :key="item" :label="item"
+                                                    :value="item">
+                                                </el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                        <el-form-item label="最大深度">
+                                            <el-input v-model="algorithmForm.max_depth">
+                                            </el-input>
+                                        </el-form-item>
+                                        <el-form-item label="最大叶节点数量">
+                                            <el-input v-model="algorithmForm.max_leaf_nodes">
+                                            </el-input>
+                                        </el-form-item>
+                                    </div>
+                                    <div v-if="algorithmForm.algorithm == 'SVMClassifier'">
+                                        <el-form-item label="核函数">
+                                            <el-select v-model="algorithmForm.kernel">
+                                                <el-option v-for="item in kernel" :key="item" :label="item"
+                                                    :value="item">
+                                                </el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                        <el-form-item label="正则化参数">
+                                            <el-input v-model="algorithmForm.C">
+                                            </el-input>
+                                        </el-form-item>
+                                        <el-form-item label="最大迭代次数">
+                                            <el-input v-model="algorithmForm.max_iter_svm">
+                                            </el-input>
+                                        </el-form-item>
+                                        <el-form-item label="停止的误差标准">
+                                            <el-input v-model="algorithmForm.tol">
+                                            </el-input>
+                                        </el-form-item>
+
+                                    </div>
+                                    <div v-if="algorithmForm.algorithm != ''">
+                                       <el-row></el-row>
+                                    <el-row type="flex" justify="center">
+                                        <el-button type="primary" round v-on:click="resetAlForm">重置为默认值</el-button>
+                                    </el-row> 
+                                    </div>
+                                    
+                                </el-form>
+                            </el-col>
+                            <el-col :span="12">
+                                <el-row type="flex" justify="center">
+                                    <el-upload class="upload-demo" drag
+                                        action="https://jsonplaceholder.typicode.com/posts/" ref="uploadTrain"
+                                        accept=".csv" :auto-upload="false" :action="uploadUrl"
+                                        :before-upload="beforeUpload" name="train.csv" :on-remove="clearPreCols"
+                                        :on-success="handleUploadPreSuccess" :limit="1">
+                                        <i class="el-icon-upload" style="font-size: 45px;">训练数据</i>
+                                        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                                    </el-upload>
+                                </el-row>
+                                <el-row type="flex" justify="center">
+                                    <el-upload class="upload-demo" drag
+                                        action="https://jsonplaceholder.typicode.com/posts/" ref="uploadTest"
+                                        accept=".csv" :auto-upload="false" :action="uploadUrl"
+                                        :before-upload="beforeUpload" name="test.csv" :on-remove="clearPreCols"
+                                        :on-success="handleUploadPreSuccess" :limit="1">
+                                        <i class="el-icon-upload" style="font-size: 45px;">测试数据</i>
+                                        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                                    </el-upload>
+                                </el-row>
+                            </el-col>
+
                         </el-main>
                         <el-footer>
                             <el-row type="flex" justify="center">
@@ -218,7 +320,7 @@
                 <!-- 3.输出模型-->
                 <div class="block" v-if="visibleStep[3].visible">
                     <el-row>3、获得分析模型</el-row>
-                    <el-row>
+                    <el-row type="flex" justify="center">
                         <el-button type="primary" round v-on:click="download">点击下载模型</el-button>
                         <el-button type="primary" round v-on:click="turnToNextStep(3)">以此模型进行数据预测</el-button>
                     </el-row>
@@ -233,9 +335,15 @@
                     <el-row>4、上传预测文件</el-row>
                     <el-row>
                         <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
-                            ref="upload" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload"
+                            ref="uploadPredModel" accept=".model" :action="uploadUrl" :before-upload="beforeUploadModel"
                             name="predict.csv" :auto-upload="false" :on-success="handleUploadSuccess" :limit="1">
-                            <i class="el-icon-upload">预测数据</i>
+                            <i class="el-icon-upload" style="font-size: 45px;">预测模型</i>
+                            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                        </el-upload>
+                        <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
+                            ref="uploadPredCSV" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload"
+                            name="predict.model" :auto-upload="false" :on-success="handleUploadSuccess" :limit="1">
+                            <i class="el-icon-upload" style="font-size: 45px;">预测数据</i>
                             <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                         </el-upload>
                         <el-row type="flex" justify="center">
@@ -311,27 +419,29 @@
                 },
                 //算法选择
                 options_alg: [{
-                    value: 1,
+                    value: 'linearRegression',
                     label: 'linearRegression',
                     description: 'linearRegression算法是...(可能会有图,要预留空间,图片是测试用的)',
                     score: 5,
                     image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
                 }, {
-                    value: 2,
+                    value: 'decisionTreeClassfier',
                     label: 'decisionTreeClassfier',
                     description: 'decisionTreeClassfier算法是...',
                     score: 4,
                     image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
                 }, {
-                    value: 3,
+                    value: 'SVMClassifier',
                     label: 'SVMClassifier',
                     description: 'SVMClassifier算法是...',
                     score: 4,
                     image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
                 },
                 ],
-                //参数选择
-
+                //算法参数选择
+                loss: ["squared_loss", "huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
+                criterion: ["gini", "entropy", "log_loss"],
+                kernel: ["linear", "poly", "rbf", "sigmoid", "precomputed"],
                 algorithmForm: {
                     algorithm: '',
                     //linearRegression
@@ -346,9 +456,9 @@
                     //SVMClassifier
                     C: 1.0,
                     kernel: "rbf",
-                    tol: 0.001,
+                    //注：svm也有tol，由于默认值相同，不保存为两个
                     max_iter_svm: -1,
-                    //max_iter重名，表单获取完后再赋值
+                    //注：max_iter重名，表单获取完后再赋值
                     max_iter: '',
                 },
             };
@@ -370,6 +480,9 @@
                     this.$message.error('上传文件只能是 csv 格式!');
                 }
                 return isCSV;
+            },
+            beforeUploadModel(file) {
+                return true;
             },
             getCols(file, fileList) {
                 let reader = new FileReader();   //先new 一个读文件的对象 FileReader
@@ -456,12 +569,21 @@
                 //todo 上传preprocForm
                 //if success 保存csv
                 //else
-
-                this.turnToNextStep(1);
-                this.algorithm_get();
             },
             clearAll() {
                 this.clearPreCols();
+            },
+            resetAlForm() {
+                this.algorithmForm.loss = "squared_loss"
+                this.algorithmForm.max_iter_li = 1000
+                this.algorithmForm.shuffle = true
+                this.algorithmForm.tol = 0.001
+                this.algorithmForm.criterion = "gini"
+                this.algorithmForm.max_depth = 1000
+                this.algorithmForm.max_leaf_nodes = 1000
+                this.algorithmForm.C = 1.0
+                this.algorithmForm.kernel = "rbf"
+                this.algorithmForm.max_iter_svm = -1
             },
             turnToPrevStep(step) {
                 this.visibleStep[step - 1].visible = true;
