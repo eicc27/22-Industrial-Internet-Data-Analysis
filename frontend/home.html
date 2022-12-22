@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- 1. 引入vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
@@ -11,6 +12,7 @@
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css" />
     <!-- 3. 引入组件库 -->
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <title>数据分析</title>
     <style>
         body,
@@ -93,10 +95,10 @@
                         <el-main>
                             <el-col :span="span_1">
                                 <el-row type="flex" justify="center">
-                                    <el-upload class="upload-demo" drag
-                                        action="https://jsonplaceholder.typicode.com/posts/" ref="uploadPrep"
-                                        accept=".csv" :action="uploadUrl" :before-upload="beforeUpload" name="preproc.csv"
-                                        :on-remove="clearPreCols" :on-success="handleUploadPreSuccess" :limit="1">
+                                    <el-upload class="upload-demo" drag action="http://127.0.0.1:12000/upload"
+                                        ref="uploadPrep" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload"
+                                        name="preproc.csv" :on-remove="preRemove" :on-success="handleUploadPreSuccess"
+                                        :limit="1">
                                         <i class="el-icon-upload" style="font-size: 45px;">预处理数据</i>
                                         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                                     </el-upload>
@@ -178,9 +180,9 @@
                         <el-footer>
                             <el-row type="flex" justify="center">
                                 <el-button type="primary" round v-on:click="turnToPrevStep(1)">上一步</el-button>
-                                <el-button type="primary" round v-on:click="uploadPre">上传</el-button>
+                                <el-button type="primary" round v-on:click="uploadPreForm">上传</el-button>
                                 <el-button type="primary" round
-                                    v-on:click="turnToNextStep(1);algorithm_get();">下一步</el-button>
+                                    v-on:click="clearPreCols();turnToNextStep(1);algorithm_get();">下一步</el-button>
                             </el-row>
                         </el-footer>
                     </el-container>
@@ -275,12 +277,12 @@
 
                                     </div>
                                     <div v-if="algorithmForm.algorithm != ''">
-                                       <el-row></el-row>
-                                    <el-row type="flex" justify="center">
-                                        <el-button type="primary" round v-on:click="resetAlForm">重置为默认值</el-button>
-                                    </el-row> 
+                                        <el-row></el-row>
+                                        <el-row type="flex" justify="center">
+                                            <el-button type="primary" round v-on:click="resetAlForm">重置为默认值</el-button>
+                                        </el-row>
                                     </div>
-                                    
+
                                 </el-form>
                             </el-col>
                             <el-col :span="12">
@@ -289,7 +291,7 @@
                                         action="https://jsonplaceholder.typicode.com/posts/" ref="uploadTrain"
                                         accept=".csv" :auto-upload="false" :action="uploadUrl"
                                         :before-upload="beforeUpload" name="train.csv" :on-remove="clearPreCols"
-                                        :on-success="handleUploadPreSuccess" :limit="1">
+                                        :on-success="handleUploadTrainSuccess" :limit="1">
                                         <i class="el-icon-upload" style="font-size: 45px;">训练数据</i>
                                         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                                     </el-upload>
@@ -299,7 +301,7 @@
                                         action="https://jsonplaceholder.typicode.com/posts/" ref="uploadTest"
                                         accept=".csv" :auto-upload="false" :action="uploadUrl"
                                         :before-upload="beforeUpload" name="test.csv" :on-remove="clearPreCols"
-                                        :on-success="handleUploadPreSuccess" :limit="1">
+                                        :on-success="handleUploadTestSuccess" :limit="1">
                                         <i class="el-icon-upload" style="font-size: 45px;">测试数据</i>
                                         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                                     </el-upload>
@@ -336,13 +338,13 @@
                     <el-row>
                         <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
                             ref="uploadPredModel" accept=".model" :action="uploadUrl" :before-upload="beforeUploadModel"
-                            name="predict.csv" :auto-upload="false" :on-success="handleUploadSuccess" :limit="1">
+                            name="predict.csv" :auto-upload="false" :on-success="handleUploadPredSuccess" :limit="1">
                             <i class="el-icon-upload" style="font-size: 45px;">预测模型</i>
                             <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                         </el-upload>
                         <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
                             ref="uploadPredCSV" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload"
-                            name="predict.model" :auto-upload="false" :on-success="handleUploadSuccess" :limit="1">
+                            name="predict.model" :auto-upload="false" :on-success="handleUploadDataSuccess" :limit="1">
                             <i class="el-icon-upload" style="font-size: 45px;">预测数据</i>
                             <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                         </el-upload>
@@ -466,16 +468,37 @@
         methods: {
             handleUploadPreSuccess(res, file, fileList) {
                 this.$message.success('csv文件上传成功!');
-                this.getCols(file, fileList);
-            },
-            handleUploadSuccess(file, fileList) {
-                this.$message.success('上传成功!');
 
+                let reader = new FileReader();   //先new 一个读文件的对象 FileReader
+                if (typeof FileReader === "undefined") {  //用来判断你的浏览器是否支持 FileReader
+                    this.$message.error('浏览器不支持文件读取');
+                    return;
+                }
+                reader.readAsText(file.raw);
+                reader.onload = (e) => {
+                    let isSame = (e.target.result.split('\n')[0].replace('\r', '') === this.options_col.join(','))
+                    if (!isSame) {
+                        this.$message.warning("读取新数据列")
+                        this.clearPreCols();
+                        this.getCols(file, fileList);
+                    } else {
+                        this.$message.success("数据列相同，保留初始选择")
+                        this.op_vis = true;
+                        this.span_1 = 12;
+                        this.span_2 = 12;
+                    }
+                }
             },
-
+            preRemove() {
+                this.op_vis = false;
+                this.span_1 = 24;
+                this.span_2 = 0;
+            },
             beforeUpload(file) {
+                console.log('type', file.type)
                 const isCSV = (file.type === "application/vnd.ms-excel")
-                    || (file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                    || (file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    || (file.type === "text/csv");
                 if (!isCSV) {
                     this.$message.error('上传文件只能是 csv 格式!');
                 }
@@ -501,7 +524,7 @@
                         if (i < this.options_col.length - 1) {
                             this.preprocForm.data_col.push(i);
                         } else {
-                            this.preprocForm.pred_col = this.options_col[i];
+                            this.preprocForm.pred_col = i;
                         }
                         this.preprocForm.dir_p_n[i] = [null, null];
                     }
@@ -527,7 +550,7 @@
                 };
             },
             opChange() {
-                this.preprocForm.data_col.sort();
+                this.preprocForm.data_col.sort((a, b) => { return a - b });
                 this.options_pred = [];
                 this.preprocForm.pred_col = '';
                 this.pred_col_dis = true;
@@ -565,8 +588,20 @@
             siftthChange() {
                 console.log("th", this.preprocForm.sifting.th);
             },
-            uploadPre() {
+            uploadPreForm() {
                 //todo 上传preprocForm
+                for (let i in this.preprocForm.dir_p_n) {
+                    this.preprocForm.padding.push(this.preprocForm.dir_p_n[i][0])
+                    this.preprocForm.norm.push(this.preprocForm.dir_p_n[i][1])
+                }
+                axios.post(
+                    'http://127.0.0.1:12000/preproc', this.preprocForm
+                ).then(
+                    (res) => {
+                        console.log(res)
+                    }, (error) => {
+                        console.log(error)
+                    })
                 //if success 保存csv
                 //else
             },
@@ -584,6 +619,18 @@
                 this.algorithmForm.C = 1.0
                 this.algorithmForm.kernel = "rbf"
                 this.algorithmForm.max_iter_svm = -1
+            },
+            handleUploadTrainSuccess() {
+                //todo
+            },
+            handleUploadTestSuccess() {
+                //todo
+            },
+            handleUploadModelSuccess() {
+                //todo
+            }, 
+            handleUploadTestSuccess() {
+                //todo
             },
             turnToPrevStep(step) {
                 this.visibleStep[step - 1].visible = true;
