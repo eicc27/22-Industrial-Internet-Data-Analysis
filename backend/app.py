@@ -28,12 +28,14 @@ def intro():
     return jsonify(json.load(open('./intro.json', 'r')))
 
 
-@app.route("/upload", methods=['POST'])
+@app.route("/upload", methods=['post'])
 def upload():
     try:
+
         file = request.files.get("file")
         file.save("./src/data.csv")
-        Utils.strs_to_csv("./src/data.csv")
+        print(file.filename)
+        """ Utils.strs_to_csv("./src/data.csv") """
     except:
         return jsonify({
             'code': 400,
@@ -164,7 +166,7 @@ def linearReg():
         })
 
 
-@app.route("/decisionTreeClassfier", methods=['POST'])
+@app.route("/decisionTreeClassifier", methods=['POST'])
 def decisionTree():
     try:
         file_train = request.files.get("train")
@@ -249,7 +251,10 @@ def linearRegPredict():
         file_predict.save('./src/' + "predict.csv")
         file_model.save('./src/' + "model.model")
         LinearRegressionPredict()
-        return send_from_directory("./src", 'result.csv')
+        return jsonify({
+            'code': 200,
+            'msg': "预测成功"
+        })
     except:
         return jsonify({
             'code': 400,
@@ -257,7 +262,7 @@ def linearRegPredict():
         })
 
 
-@app.route("/DecisionTreeClassifierPredict", methods=['POST'])
+@app.route("/decisionTreeClassifierPredict", methods=['POST'])
 def DecisionTreeClassifierPred():
     try:
         file_predict = request.files.get("predict")
@@ -268,7 +273,10 @@ def DecisionTreeClassifierPred():
         file_model.save('./src/' + "model.model")
 
         DecisionTreeClassifierPredict()
-        return send_from_directory("./src", 'result.csv')
+        return jsonify({
+            'code': 200,
+            'msg': "预测成功"
+        })
     except:
         return jsonify({
             'code': 400,
@@ -286,7 +294,10 @@ def SVMClassifierPred():
         file_model.save('./src/' + "model.model")
         file_encoder.save('./src/' + "encoder.model")
         SVMClassifierPredict()
-        return send_from_directory("./src", 'result.csv')
+        return jsonify({
+            'code': 200,
+            'msg': "预测成功"
+        })
     except:
         return jsonify({
             'code': 400,
@@ -294,19 +305,19 @@ def SVMClassifierPred():
         })
 
 
-@app.route("/getModel", methods=['POST'])
+@app.route("/getModel", methods=['get'])
 def getModel():
     return send_from_directory('./src', 'model.model')
 
 
-@app.route("/getEncoderModel", methods=['POST'])
+@app.route("/getEncoderModel", methods=['get'])
 def getEncoderModel():
     return send_from_directory('./src', 'encoder.model')
 
 
-# @app.route("/getResult", methods=['POST'])
-# def getResult():
-#     return send_from_directory('./src', 'result.csv')
+@app.route("/getResult", methods=['POST'])
+def getResult():
+     return send_from_directory('./src', 'result.csv')
 
 
 if __name__ == '__main__':

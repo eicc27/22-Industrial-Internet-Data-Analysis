@@ -13,6 +13,7 @@
     <!-- 3. 引入组件库 -->
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
     <title>数据分析</title>
     <style>
         body,
@@ -92,47 +93,60 @@
                         <el-header>
                             1、上传训练数据集并预处理
                         </el-header>
+
+
                         <el-main>
-                            <el-col :span="span_1">
+
+                            <el-col :span="20">
                                 <el-row type="flex" justify="center">
-                                    <el-upload class="upload-demo" drag action="http://127.0.0.1:12000/upload"
-                                        ref="uploadPrep" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload"
-                                        name="preproc.csv" :on-remove="preRemove" :on-success="handleUploadPreSuccess"
-                                        :limit="1">
-                                        <i class="el-icon-upload" style="font-size: 45px;">预处理数据</i>
-                                        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-                                    </el-upload>
+                                    <el-form :rules="rules" :model="preFileForm" ref="preFileForm" label-width="150px">
+                                        <el-form-item label="" prop="file">
+                                            <el-upload class="upload-demo" drag accept=".csv" action="" ref="prevUpload"
+                                                :before-upload="beforeUpload" name="preproc.csv" :on-remove="preRemove"
+                                                :limit="1" :on-change="handlePreChange" :auto-upload="false">
+                                                <i class="el-icon-upload" style="font-size: 45px;">预处理数据</i>
+                                                <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                                            </el-upload>
+                                        </el-form-item>
+                                    </el-form>
                                 </el-row>
                             </el-col>
-                            <el-col :span="span_2">
-                                <div v-if="op_vis">
+                            <el-col :span="26">
+                                <div>
                                     <el-form ref="preprocForm" :model="preprocForm">
                                         <el-row :gutter="2">
-                                            <el-col :span="14">
+                                            <el-col :span="12">
+                                            </el-col>
+                                            <el-col :span="12">
                                                 <el-form-item label="sifting method">
                                                     <el-select v-model="preprocForm.sifting.method" @change="siftChange"
                                                         clearable>
                                                         <el-option v-for="method in sifting" :key="method"
                                                             :label="method" :value="method">
+                                                            <!-- <el-popover placement="left-start" :title="item.label"
+                                                                width="350" trigger="hover" :content="item.description">
+                                                                <p> {{item.description}} </p>
+                                                                <img :src="item.image" width="300" />
+                                                                <el-button slot="reference" type="text"
+                                                                    style="width:100%;color:black;">
+                                                                    <span>{{item.label}}</span>
+                                                                </el-button>
+                                                            </el-popover> -->
                                                         </el-option>
                                                     </el-select>
                                                 </el-form-item>
                                             </el-col>
-                                            <el-col :span="8">
-                                                <el-form-item label="th">
-                                                    <el-select v-model="preprocForm.sifting.th" @change="siftthChange"
-                                                        clearable :disabled="sift_th_dis">
-                                                        <el-option v-for="th in sifting_th" :key="th" :label="th"
-                                                            :value="th">
-                                                        </el-option>
-                                                    </el-select>
+                                            <el-col :span="12">
+                                                <el-form-item label="th(输入浮点数)">
+                                                        <el-input v-model="preprocForm.sifting.th">
+                                                        </el-input>
                                                 </el-form-item>
                                             </el-col>
                                         </el-row>
                                         <el-row :gutter="2">
                                             <el-col :span="11">
                                                 <el-form-item label="运算列">
-                                                    <el-select v-model="preprocForm.data_col" collapse-tags multiple
+                                                    <el-select v-model="preprocForm.data_columns" collapse-tags multiple
                                                         placeholder="选择参与运算的数据" @change="opChange">
                                                         <el-option v-for="(col,index) in options_col" :key="index"
                                                             :label="col" :value="index">
@@ -142,7 +156,8 @@
                                             </el-col>
                                             <el-col :span="11">
                                                 <el-form-item label="预测列">
-                                                    <el-select v-model="preprocForm.pred_col" :disabled="pred_col_dis">
+                                                    <el-select v-model="preprocForm.pred_column"
+                                                        :disabled="pred_column_dis">
                                                         <el-option v-for="(col,index) in options_pred" :key="index"
                                                             :label="col" :value="index">
                                                         </el-option>
@@ -151,7 +166,7 @@
                                             </el-col>
                                         </el-row>
                                         <el-row>
-                                            <el-form-item v-for="(col,index) in preprocForm.data_col"
+                                            <el-form-item v-for="(col,index) in preprocForm.data_columns"
                                                 :label="options_col[col]" :key="col">
                                                 <el-row :gutter="2">
                                                     <el-col :span="11">
@@ -177,14 +192,18 @@
                                 </div>
                             </el-col>
                         </el-main>
+
+
                         <el-footer>
                             <el-row type="flex" justify="center">
                                 <el-button type="primary" round v-on:click="turnToPrevStep(1)">上一步</el-button>
-                                <el-button type="primary" round v-on:click="uploadPreForm">上传</el-button>
+                                <el-button type="primary" round v-on:click="uploadPreForm">进行预处理并下载</el-button>
                                 <el-button type="primary" round
                                     v-on:click="clearPreCols();turnToNextStep(1);algorithm_get();">下一步</el-button>
                             </el-row>
                         </el-footer>
+
+
                     </el-container>
                 </div>
                 <!-- 1.训练数据上传end -->
@@ -202,15 +221,6 @@
                                             @change="resetAlForm">
                                             <el-option v-for="item in options_alg" :key="item.value" :label="item.label"
                                                 :value="item.value">
-                                                <el-popover placement="left-start" :title="item.label" width="350"
-                                                    trigger="hover" :content="item.description">
-                                                    <p> {{item.description}} </p>
-                                                    <img :src="item.image" width="300" />
-                                                    <el-button slot="reference" type="text"
-                                                        style="width:100%;color:black;">
-                                                        <span>{{item.label}}</span>
-                                                    </el-button>
-                                                </el-popover>
                                             </el-option>
                                         </el-select>
                                     </el-form-item>
@@ -237,7 +247,7 @@
                                             </div>
                                         </el-form-item>
                                     </div>
-                                    <div v-if="algorithmForm.algorithm == 'decisionTreeClassfier'">
+                                    <div v-if="algorithmForm.algorithm == 'decisionTreeClassifier'">
                                         <el-form-item label="分裂选择评估">
                                             <el-select v-model="algorithmForm.criterion">
                                                 <el-option v-for="item in criterion" :key="item" :label="item"
@@ -287,21 +297,19 @@
                             </el-col>
                             <el-col :span="12">
                                 <el-row type="flex" justify="center">
-                                    <el-upload class="upload-demo" drag
-                                        action="https://jsonplaceholder.typicode.com/posts/" ref="uploadTrain"
-                                        accept=".csv" :auto-upload="false" :action="uploadUrl"
-                                        :before-upload="beforeUpload" name="train.csv" :on-remove="clearPreCols"
-                                        :on-success="handleUploadTrainSuccess" :limit="1">
+                                    <el-upload class="upload-demo" drag action="" ref="uploadTrain" accept=".csv"
+                                        :auto-upload="false" :before-upload="beforeUpload" name="train.csv"
+                                        :on-remove="clearPreCols" :on-success="handleUploadTrainSuccess" :limit="1"
+                                        :on-change="handleTrainChange">
                                         <i class="el-icon-upload" style="font-size: 45px;">训练数据</i>
                                         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                                     </el-upload>
                                 </el-row>
                                 <el-row type="flex" justify="center">
-                                    <el-upload class="upload-demo" drag
-                                        action="https://jsonplaceholder.typicode.com/posts/" ref="uploadTest"
-                                        accept=".csv" :auto-upload="false" :action="uploadUrl"
-                                        :before-upload="beforeUpload" name="test.csv" :on-remove="clearPreCols"
-                                        :on-success="handleUploadTestSuccess" :limit="1">
+                                    <el-upload class="upload-demo" drag action="" ref="uploadTest" accept=".csv"
+                                        :auto-upload="false" :before-upload="beforeUpload" name="test.csv"
+                                        :on-remove="clearPreCols" :on-success="handleUploadTestSuccess" :limit="1"
+                                        :on-change="handleTestChange">
                                         <i class="el-icon-upload" style="font-size: 45px;">测试数据</i>
                                         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                                     </el-upload>
@@ -323,7 +331,9 @@
                 <div class="block" v-if="visibleStep[3].visible">
                     <el-row>3、获得分析模型</el-row>
                     <el-row type="flex" justify="center">
-                        <el-button type="primary" round v-on:click="download">点击下载模型</el-button>
+                        <el-button type="primary" round v-on:click="downloadModel">点击下载模型文件</el-button>
+                        <el-button v-if="V_downEncoder" type="primary" round
+                            v-on:click="downloadEncoder">点击下载编码文件</el-button>
                         <el-button type="primary" round v-on:click="turnToNextStep(3)">以此模型进行数据预测</el-button>
                     </el-row>
                     <el-row type="flex" justify="center">
@@ -336,21 +346,25 @@
                 <div class="block" v-if="visibleStep[4].visible">
                     <el-row>4、上传预测文件</el-row>
                     <el-row>
-                        <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
-                            ref="uploadPredModel" accept=".model" :action="uploadUrl" :before-upload="beforeUploadModel"
-                            name="predict.csv" :auto-upload="false" :on-success="handleUploadPredSuccess" :limit="1">
+                        <el-upload class="upload-demo" drag action="" ref="uploadPredModel" accept=".model"
+                            :before-upload="beforeUploadModel" name="model.model" :auto-upload="false" :limit="1"
+                            :on-change="handleModelChange">
                             <i class="el-icon-upload" style="font-size: 45px;">预测模型</i>
                             <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                         </el-upload>
-                        <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
-                            ref="uploadPredCSV" accept=".csv" :action="uploadUrl" :before-upload="beforeUpload"
-                            name="predict.model" :auto-upload="false" :on-success="handleUploadDataSuccess" :limit="1">
-                            <i class="el-icon-upload" style="font-size: 45px;">预测数据</i>
+                        <el-upload class="upload-demo" drag action="" ref="uploadPredModel" accept=".model"
+                            :before-upload="beforeUploadModel" name="encoder.model" :auto-upload="false" :limit="1"
+                            v-if="V_downEncoder" :on-change="handleEncodeChange">
+                            <i class="el-icon-upload" style="font-size: 45px;">编码模型</i>
                             <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                         </el-upload>
-                        <el-row type="flex" justify="center">
-                            <el-button type="primary" round v-on:click="upload">确认上传</el-button>
-                        </el-row>
+                        <el-upload class="upload-demo" drag action="" ref="uploadPredCSV" accept=".csv"
+                            :before-upload="beforeUpload" name="predict.model" :auto-upload="false" :limit="1"
+                            :on-change="handlePredictChange">
+                            <i class="el-icon-upload" style="font-size: 45px;">要预测数据</i>
+                            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                        </el-upload>
+
                     </el-row>
                     <el-row type="flex" justify="center">
                         <el-button type="primary" round v-on:click="turnToPrevStep(4)">上一步</el-button>
@@ -363,8 +377,8 @@
                 <div class="block" v-if="visibleStep[5].visible">
                     <el-row>5、预测结果及下载</el-row>
                     <el-row type="flex" justify="center">
-                        <el-button type="primary" round v-on:click="download">点击下载预测结果</el-button>
-                        <el-button type="primary" round v-on:click="showChart">查看预测结果</el-button>
+                        <el-button type="primary" round v-on:click="downloadPredict">点击下载预测结果</el-button>
+                        <!-- <el-button type="primary" round v-on:click="showChart">查看预测结果</el-button> -->
                     </el-row>
                     <el-row type="flex" justify="center">
                         <el-button type="primary" round v-on:click="turnToPrevStep(5)">上一步</el-button>
@@ -398,19 +412,25 @@
                 padding: ['zero', 'mean', 'median', 'knnc', 'knnr', 'forestc', 'forestr'],
                 norm: ['minmax', 'zscore', 'sigmoid', 'log', 'l2'],
                 sifting: ['dbscan', 'if'],
-                sifting_th: ['float'],
+                sifting_th: 0,
                 //预测时选择参与运算的列和需要预测的列
                 span_1: 24,
                 span_2: 0,
                 options_col: [],
                 options_pred: [],
                 op_vis: false,
-                pred_col_dis: true,
+                pred_column_dis: true,
                 sift_th_dis: true,
+                //预处理文件
+                preFileForm: {
+                    file: null,
+                    fileList: []
+                },
+                rules: {},
                 //预处理表单
                 preprocForm: {
-                    data_col: [],
-                    pred_col: '',
+                    data_columns: [],
+                    pred_column: '',
                     padding: [],
                     norm: [],
                     dir_p_n: {},
@@ -427,9 +447,9 @@
                     score: 5,
                     image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
                 }, {
-                    value: 'decisionTreeClassfier',
-                    label: 'decisionTreeClassfier',
-                    description: 'decisionTreeClassfier算法是...',
+                    value: 'decisionTreeClassifier',
+                    label: 'decisionTreeClassifier',
+                    description: 'decisionTreeClassifier算法是...',
                     score: 4,
                     image: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg'
                 }, {
@@ -445,13 +465,15 @@
                 criterion: ["gini", "entropy", "log_loss"],
                 kernel: ["linear", "poly", "rbf", "sigmoid", "precomputed"],
                 algorithmForm: {
+                    train: null,
+                    test: null,
                     algorithm: '',
                     //linearRegression
                     loss: "squared_loss",
                     max_iter_li: 1000,
                     shuffle: true,
                     tol: 0.001,
-                    //decisionTreeClassfier
+                    //decisionTreeClassifier
                     criterion: "gini",
                     max_depth: 1000,
                     max_leaf_nodes: 1000,
@@ -463,10 +485,16 @@
                     //注：max_iter重名，表单获取完后再赋值
                     max_iter: '',
                 },
+                V_downEncoder: false,
+                predictForm: {
+                    model: '',
+                    encoder: null,
+                    predict: ''
+                }
             };
         },
         methods: {
-            handleUploadPreSuccess(res, file, fileList) {
+            handlePreSuccess() {
                 this.$message.success('csv文件上传成功!');
 
                 let reader = new FileReader();   //先new 一个读文件的对象 FileReader
@@ -474,13 +502,14 @@
                     this.$message.error('浏览器不支持文件读取');
                     return;
                 }
-                reader.readAsText(file.raw);
+                reader.readAsText(this.preFileForm.file);
                 reader.onload = (e) => {
                     let isSame = (e.target.result.split('\n')[0].replace('\r', '') === this.options_col.join(','))
                     if (!isSame) {
                         this.$message.warning("读取新数据列")
                         this.clearPreCols();
-                        this.getCols(file, fileList);
+                        this.getCols(this.preFileForm.file, this.preFileForm.fileList);
+                        
                     } else {
                         this.$message.success("数据列相同，保留初始选择")
                         this.op_vis = true;
@@ -507,6 +536,67 @@
             beforeUploadModel(file) {
                 return true;
             },
+            handlePreChange(file, fileList) {
+                this.preFileForm.file = file.raw;
+                this.preFileForm.fileList = fileList;
+                let formData = new FormData();
+                formData.append('name', 'pre.csv')
+                formData.append('file', file.raw);
+                console.log(formData.get('file'))
+                var reader = new FileReader();
+                reader.readAsText(this.preFileForm.file);
+                if (typeof FileReader === "undefined") {  //用来判断你的浏览器是否支持 FileReader
+                    this.$message.error('浏览器不支持文件读取');
+                    return;
+                }
+                console.log(reader);
+                reader.onload = (e) => {
+                    let isSame = (e.target.result.split('\n')[0].replace('\r', '') === this.options_col.join(','))
+                    if (!isSame) {
+                        this.$message.warning("读取新数据列")
+                        this.clearPreCols();
+                        this.getCols(file, fileList);
+                    } else {
+                        this.$message.success("数据列相同，保留初始选择")
+
+                        this.span_1 = 12;
+                        this.span_2 = 12;
+                    }
+                }
+                /* reader.onload = function (e) {
+                    var content = e.target.result;
+                    console.log(content);
+                } */
+                axios.post("/upload", formData, { headers: { 'Content-Type': 'multipart/form-data,charset=utf-8', }, }).then((res) => {
+                    console.log(res);
+                    this.$message.success("上传成功")
+
+
+                    //先new 一个读文件的对象 FileReader
+
+                }, (error) => {
+                    this.$message.error("上传失败")
+                })
+            },
+            //上传要预处理的文件
+            /* submitPreFileForm() {
+
+                let formData = new FormData();
+                formData.append('name', 'pre.csv')
+                formData.append('file', this.preFileForm.file);
+                axios.post("/upload", formData, { headers: { 'Content-Type': 'multipart/form-data,charset=utf-8', }, }).then((res) => {
+                    this.$message.success("上传成功")
+                    this.handlePreSuccess();
+                }, (error) => {
+                    this.$message.error("上传失败")
+                })
+
+            },
+            submitForm() {
+                this.$refs.prevUpload.submit();
+            }, */
+
+
             getCols(file, fileList) {
                 let reader = new FileReader();   //先new 一个读文件的对象 FileReader
                 if (typeof FileReader === "undefined") {  //用来判断你的浏览器是否支持 FileReader
@@ -519,14 +609,14 @@
                     this.op_vis = true;
                     this.span_1 = 12;
                     this.span_2 = 12;
-                    this.pred_col_dis = false;
+                    this.pred_column_dis = false;
                     for (let i = 0; i < this.options_col.length; i++) {
                         if (i < this.options_col.length - 1) {
-                            this.preprocForm.data_col.push(i);
+                            this.preprocForm.data_columns.push(i);
                         } else {
-                            this.preprocForm.pred_col = i;
+                            this.preprocForm.pred_column = i;
                         }
-                        this.preprocForm.dir_p_n[i] = [null, null];
+                        this.preprocForm.dir_p_n[i] = ['zero', 'minmax'];
                     }
                 }
             },
@@ -535,11 +625,11 @@
                 this.span_1 = 24;
                 this.span_2 = 0;
                 this.options_pred = [];
-                this.pred_col_dis = true;
+                this.pred_column_dis = true;
                 this.sift_th_dis = true;
                 this.preprocForm = {
-                    data_col: [],
-                    pred_col: '',
+                    data_columns: [],
+                    pred_column: '',
                     padding: [],
                     norm: [],
                     dir_p_n: {},
@@ -550,13 +640,13 @@
                 };
             },
             opChange() {
-                this.preprocForm.data_col.sort((a, b) => { return a - b });
+                this.preprocForm.data_columns.sort((a, b) => { return a - b });
                 this.options_pred = [];
-                this.preprocForm.pred_col = '';
-                this.pred_col_dis = true;
-                if (!(this.preprocForm.data_col == undefined || this.preprocForm.data_col.length <= 0)) {
+                this.preprocForm.pred_column = '';
+                this.pred_column_dis = true;
+                if (!(this.preprocForm.data_columns == undefined || this.preprocForm.data_columns.length <= 0)) {
                     for (let i = 0; i < this.options_col.length; i++) {
-                        if (!this.preprocForm.data_col.includes(i)) {
+                        if (!this.preprocForm.data_columns.includes(i)) {
                             this.options_pred.push(this.options_col[i]);
                             if (this.preprocForm.dir_p_n[i][0] !== null) {
                                 this.preprocForm.dir_p_n[i][0] = null;
@@ -567,21 +657,21 @@
                         }
                     }
                     if (this.options_pred.length <= 0) {
-                        this.pred_col_dis = true;
+                        this.pred_column_dis = true;
                     } else {
-                        this.pred_col_dis = false;
+                        this.pred_column_dis = false;
                     }
                 }
             },
             siftChange() {
                 if (this.preprocForm.sifting.method == "dbscan") {
-                    this.preprocForm.sifting.th = 'float';
+                    this.preprocForm.sifting.th = 0.1;
                     this.sift_th_dis = true;
                 } else if (this.preprocForm.sifting.method == "if") {
-                    this.preprocForm.sifting.th = '';
+                    this.preprocForm.sifting.th = null;
                     this.sift_th_dis = false;
                 } else {
-                    this.preprocForm.sifting.th = '';
+                    this.preprocForm.sifting.th = 0.1;
                     this.sift_th_dis = true;
                 }
             },
@@ -590,15 +680,37 @@
             },
             uploadPreForm() {
                 //todo 上传preprocForm
+                this.preprocForm.sifting.th=Number(this.preprocForm.sifting.th);
                 for (let i in this.preprocForm.dir_p_n) {
                     this.preprocForm.padding.push(this.preprocForm.dir_p_n[i][0])
                     this.preprocForm.norm.push(this.preprocForm.dir_p_n[i][1])
                 }
                 axios.post(
-                    'http://127.0.0.1:12000/preproc', this.preprocForm
+                    '/preproc', this.preprocForm
                 ).then(
                     (res) => {
-                        console.log(res)
+                        if(res.data.code=="400"){
+                            this.$message.error(res.data.msg)
+                        }else{
+                            let blob = new Blob([res.data], { fileType: 'application/vnd.ms-excel' })
+                        console.log(blob);
+                        let href = window.URL.createObjectURL(blob)
+                        fileName = "preproc.csv"
+                        if (window.navigator.msSaveOrOpenBlob) {
+                            console.log('1')
+                            navigator.msSaveBlob(blob, fileName)
+                        } else {
+                            console.log('2')
+                            var link = document.createElement('a')
+                            link.href = window.URL.createObjectURL(blob)
+                            link.download = fileName
+                            link.click()
+                            //释放内存
+                            window.URL.revokeObjectURL(link.href)
+                        }
+
+                        }
+                        
                     }, (error) => {
                         console.log(error)
                     })
@@ -628,7 +740,7 @@
             },
             handleUploadModelSuccess() {
                 //todo
-            }, 
+            },
             handleUploadTestSuccess() {
                 //todo
             },
@@ -648,21 +760,158 @@
                 this.visibleStep[step].visible = false;
                 this.clearAll();
             },
-            wait_train() {
-                //TODO
-                alert('training...');
+
+            //将训练文件和测试文件存储
+            handleTrainChange(file, fileList) {
+                this.algorithmForm.train = file.raw;
             },
-            download() {
+            handleTestChange(file, fileList) {
+                this.algorithmForm.test = file.raw;
+            },
+            wait_train() {
+
+                if (this.algorithmForm.algorithm == 'linearRegression') {
+                    this.algorithmForm.max_iter = this.algorithmForm.max_iter_li;
+                    this.V_downEncoder = false;
+                } else if (this.algorithmForm.algorithm == 'SVMClassifier') {
+                    this.algorithmForm.max_iter = this.algorithmForm.max_iter_svm;
+                    this.V_downEncoder = true;
+                } else {
+                    this.V_downEncoder = true;
+                }
+                url = "/" + this.algorithmForm.algorithm;
+                let formData = new FormData();
+                formData.append('train', this.algorithmForm.train)
+                formData.append('test', this.algorithmForm.test);
+                formData.append('loss', this.algorithmForm.loss);
+                formData.append('max_iter', this.algorithmForm.max_iter);
+                formData.append('shuffle', this.algorithmForm.shuffle);
+                formData.append('tol', this.algorithmForm.tol);
+                formData.append('criterion', this.algorithmForm.criterion);
+                formData.append('max_depth', this.algorithmForm.max_depth);
+                formData.append('max_leaf_nodes', this.algorithmForm.max_leaf_nodes);
+                formData.append('C', this.algorithmForm.C);
+                formData.append('kernel', this.algorithmForm.kernel);
+
+                axios.post(url, formData, { headers: { 'Content-Type': 'multipart/form-data,charset=utf-8', }, }).then((res) => {
+                    console.log(res);
+                    if (res.data.code == '200') {
+                        if (this.algorithmForm.algorithm == 'linearRegression') {
+                            this.$message.success(res.data.msg + "  误差:" + res.data.error)
+                        } else {
+                            this.$message.success(res.data.msg + "  准确率:" + res.data.accuracy)
+                        }
+
+                    } else {
+                        this.$message.error(res.data.msg)
+                    }
+
+                }, (error) => {
+                    this.$message.error("上传失败")
+                })
+            },
+            downloadModel() {
                 //TODO
-                alert('downloading...(要用户指定下载地址)');
+                axios.get("getModel", { responseType: 'blob' }).then((res) => {
+                    this.$message.success("开始下载")
+                    console.log(res);
+                    let blob = new Blob([res.data])
+                    console.log(blob);
+                    let href = window.URL.createObjectURL(blob)
+                    fileName = "model.model"
+                    if (window.navigator.msSaveOrOpenBlob) {
+                        console.log('1')
+                        navigator.msSaveBlob(blob, fileName)
+                    } else {
+                        console.log('2')
+                        var link = document.createElement('a')
+                        link.href = window.URL.createObjectURL(blob)
+                        link.download = fileName
+                        link.click()
+                        //释放内存
+                        window.URL.revokeObjectURL(link.href)
+                    }
+                }, (error) => {
+                    this.$message.error("下载失败")
+                })
+            },
+            downloadEncoder() {
+                //TODO
+                axios.get("/getEncoderModel", { responseType: 'blob' }).then((res) => {
+                    this.$message.success("开始下载")
+                    console.log(res);
+                    let blob = new Blob([res.data])
+                    console.log(blob);
+                    let href = window.URL.createObjectURL(blob)
+                    fileName = "encoder.model"
+                    if (window.navigator.msSaveOrOpenBlob) {
+                        // console.log(2)
+                        navigator.msSaveBlob(blob, fileName)
+                    } else {
+                        // console.log(3)
+                        var link = document.createElement('a')
+                        link.href = window.URL.createObjectURL(blob)
+                        link.download = fileName
+                        link.click()
+                        //释放内存
+                        window.URL.revokeObjectURL(link.href)
+                    }
+                }, (error) => {
+                    this.$message.error("下载失败")
+                })
+            },
+            downloadPredict() {
+                axios.post("/getResult").then((res) => {
+                    this.$message.success("开始下载")
+                    console.log(res);
+                    let blob = new Blob([res.data], { fileType: 'application/vnd.ms-excel' })
+                    console.log(blob);
+                    let href = window.URL.createObjectURL(blob)
+                    fileName = "result.csv"
+                    if (window.navigator.msSaveOrOpenBlob) {
+                        // console.log(2)
+                        navigator.msSaveBlob(blob, fileName)
+                    } else {
+                        // console.log(3)
+                        var link = document.createElement('a')
+                        link.href = window.URL.createObjectURL(blob)
+                        link.download = fileName
+                        link.click()
+                        //释放内存
+                        window.URL.revokeObjectURL(link.href)
+                    }
+                }, (error) => {
+                    this.$message.error("下载失败")
+                })
+            },
+            handleModelChange(file) {
+                this.predictForm.model = file.raw;
+            },
+            handleEncodeChange(file) {
+                this.predictForm.encoder = file.raw;
+            },
+            handlePredictChange(file) {
+                this.predictForm.predict = file.raw;
             },
             predict() {
-                //TODO
-                alert('predicting...');
+                url = this.algorithmForm.algorithm + 'Predict';
+                let formData = new FormData();
+                formData.append('model', this.predictForm.model)
+                formData.append('encoder', this.predictForm.encoder);
+                formData.append('predict', this.predictForm.predict);
+                axios.post(url, formData, { headers: { 'Content-Type': 'multipart/form-data,charset=utf-8', }, }).then((res) => {
+                    if (res.data.code == '200') {
+                        this.$message.success(res.data.msg)
+                    } else {
+                        this.$message.error(res.data.msg)
+                    }
+
+                }, (error) => {
+                    this.$message.error("上传失败")
+                })
             },
             algorithm_get() {
                 //TODO
-                alert('algorithm_getting...');
             },
             showChart() {
                 //TODO
@@ -671,8 +920,35 @@
 
         },
         created() {
-            //上传文件地址
-            this.uploadUrl = "https://930d4a54-3745-4938-8384-c8570928a27b.mock.pstmn.io/upload";
+            //地址
+            axios.defaults.baseURL = "http://127.0.0.1:12000"
+            const service = axios.create({
+                timeout: 5000,
+            })
+            /* service.interceptors.response.use(
+                response => {
+                    let res = response.data;
+
+                    console.log(res)
+                    if (res.code == 200 || !res.code) {
+                        return response
+                    } else {
+                        Element.Message.error(res.msg ? res.msg : '系统异常！', { duration: 3 * 1000 })
+                        return Promise.reject(response.data.msg)
+                    }
+                },
+                error => {
+                    console.log(error)
+                    console.log(error.response.status)
+                    if (error.response.data) {
+                        error.message = error.response.data.msg
+                    }
+                    if (error.message) {
+                        Element.Message.error(error.message, { duration: 3 * 1000 })
+                    }
+                    return Promise.reject(error)
+                }
+            ) */
         }
     });
 </script>
