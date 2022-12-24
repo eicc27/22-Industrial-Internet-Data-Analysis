@@ -260,7 +260,8 @@
                                             </el-input>
                                         </el-form-item>
                                         <el-form-item label="是否打乱次序">
-                                            <div><!-- 用个div将Switch撑起来-->
+                                            <div>
+                                                <!-- 用个div将Switch撑起来-->
                                                 <el-switch v-model="algorithmForm.shuffle" active-text="是"
                                                     inactive-text="否">
                                                 </el-switch>
@@ -340,8 +341,8 @@
                         <el-footer>
                             <el-row type="flex" justify="center">
                                 <el-button type="primary" round v-on:click="turnToPrevStep(2)">上一步</el-button>
-                                <el-button type="primary" round
-                                    v-on:click="turnToNextStep(2);wait_train()">开始训练</el-button>
+                                <el-button type="primary" round v-on:click="turnToNextStep(2);wait_train()">开始训练
+                                </el-button>
                             </el-row>
                         </el-footer>
                     </el-container>
@@ -352,8 +353,8 @@
                     <el-row>3、获得分析模型</el-row>
                     <el-row type="flex" justify="center">
                         <el-button type="primary" round v-on:click="downloadModel">点击下载模型文件</el-button>
-                        <el-button v-if="V_downEncoder" type="primary" round
-                            v-on:click="downloadEncoder">点击下载编码文件</el-button>
+                        <el-button v-if="V_downEncoder" type="primary" round v-on:click="downloadEncoder">点击下载编码文件
+                        </el-button>
                         <el-button type="primary" round v-on:click="turnToNextStep(3)">以此模型进行数据预测</el-button>
                     </el-row>
                     <el-row type="flex" justify="center">
@@ -787,7 +788,9 @@
             uploadPreForm() {
                 //todo 上传preprocForm
                 this.preprocForm.sifting.th = Number(this.preprocForm.sifting.th);
-                for (let i in this.preprocForm.dir_p_n) {
+                this.preprocForm.padding = []
+                this.preprocForm.norm = []
+                for (let i of this.preprocForm.data_columns) {
                     this.preprocForm.padding.push(this.preprocForm.dir_p_n[i][0])
                     this.preprocForm.norm.push(this.preprocForm.dir_p_n[i][1])
                 }

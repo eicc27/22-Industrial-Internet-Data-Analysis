@@ -54,13 +54,14 @@ def preproc():
         data = Dataloader('./src/data.csv').load()
         labels = data.columns.values
         data = data.to_numpy()
+        data = Utils.onehot(data).astype('float32')
     except ValueError:
         return jsonify({
             'code': 400,
             'msg': "文件读取失败"
         })
-    data = Utils.onehot(data)
     req: dict = json.loads(request.get_data(as_text=True))
+    Logger(f'Pred col: {req["pred_column"]}, data_cols: {req["data_columns"]}').log('info')
     pred = data[:, [req['pred_column']]]
     data_p = data[:, req['data_columns']]
     data = np.concatenate([data_p, pred], axis=1)
@@ -92,7 +93,7 @@ def preproc():
                         'msg': "norm算法出错",
                         'column_index': i
                     })
-    if req['sifting']:
+    if req['sifting'] and req['sifting'] in ['if', 'dbscan']:
         try:
             print(req['sifting']['method'])
             data = Sifting(data, req['sifting']['method'], req['pred_column'], req['sifting']['th']).run()
@@ -154,18 +155,18 @@ def linearReg():
             'msg': "参数接收失败"
         })
 
-    try:
-        error = LinearRegression(loss, max_iter, shuffle, tol)
-        return jsonify({
-            'code': 200,
-            'msg': "训练成功",
-            'error': error
-        })
-    except:
-        return jsonify({
-            'code': 402,
-            'msg': "训练失败"
-        })
+    # try:
+    error = LinearRegression(loss, max_iter, shuffle, tol)
+    return jsonify({
+        'code': 200,
+        'msg': "训练成功",
+        'error': error
+    })
+    # except:
+    #     return jsonify({
+    #         'code': 402,
+    #         'msg': "训练失败"
+    #     })
 
 
 @app.route("/decisionTreeClassifier", methods=['POST'])
