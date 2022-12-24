@@ -71,15 +71,15 @@ def preproc():
     if req['padding']:
         for i, padding in enumerate(req['padding']):
             if padding and len(padding):
-                # try:
+                try:
                     Logger(f'Padding column {labels_p[i]} using {padding}').log('info')
                     data = Padding(data, i, padding).run()
-                # except ValueError:
-                #     return jsonify({
-                #         'code': 400,
-                #         'msg': "padding算法出错",
-                #         'column_index': i
-                #     })
+                except ValueError:
+                    return jsonify({
+                        'code': 400,
+                        'msg': "padding算法出错",
+                        'column_index': i
+                    })
     pd.DataFrame(data).to_csv('./d.csv')
     if req['norm']:
         for i, norm in enumerate(req['norm']):
