@@ -3,6 +3,7 @@ import hashlib
 import time
 import pandas as pd
 import os
+from sklearn.preprocessing import OneHotEncoder
 
 class Utils:
     def dim(data: np.ndarray):
@@ -26,7 +27,8 @@ class Utils:
             col = data[:, c]
             isnan = False
             for i in col:
-                if pd.isnull(i):
+                # print(type(i))
+                if not isinstance(i, np.ndarray) and pd.isnull(i):
                     res.append(False)
                     isnan = True
                     break
@@ -49,7 +51,7 @@ class Utils:
         pred_data = []
         for r in range(rows):
             row = data[r]
-            if pd.isnull(row[target]): # append to pred_data
+            if not isinstance(row[target], np.ndarray) and pd.isnull(row[target]): # append to pred_data
                 pred_data.append(np.delete(row, target))
             else:
                 X.append(np.delete(row, target))
@@ -62,6 +64,25 @@ class Utils:
         with open(fname, 'w') as f:
             lines = [line[1:-2] + '\n' for line in _lines]
             f.writelines(lines)    
+
+    def onehot(data: np.ndarray):
+        first = data[0]
+        cols = []
+        for i, f in enumerate(first):
+            if isinstance(f, str):
+                cols.append(i)
+        print(cols)
+        for col in cols:
+            enc = OneHotEncoder().fit(data[:, col].reshape(-1, 1))
+            arr = enc.transform(data[:, col].reshape(-1, 1)).toarray()
+            for i, a in enumerate(arr):
+                idx = 0
+                for _i, _a in enumerate(a):
+                    if _a:
+                        idx = _i
+                        break
+                data[i, col] = idx
+        return data
 
     def gen_fname(fname: str):
         ext = fname.split('.')[-1]

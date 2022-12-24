@@ -21,7 +21,7 @@ from preproc.logger import Logger
 
 
 app = Flask(__name__)
-CORS(app, resources=r'/*')
+CORS(app, resources=r'/*', supports_credentials=True)
 
 
 @app.route("/preproc_intro", methods=['GET'])
@@ -32,7 +32,6 @@ def intro():
 @app.route("/upload", methods=['post'])
 def upload():
     try:
-
         file = request.files.get("file")
         print(file.name)
         file.save("./src/data.csv")
@@ -60,6 +59,7 @@ def preproc():
             'code': 400,
             'msg': "文件读取失败"
         })
+    data = Utils.onehot(data)
     req: dict = json.loads(request.get_data(as_text=True))
     pred = data[:, [req['pred_column']]]
     data_p = data[:, req['data_columns']]
