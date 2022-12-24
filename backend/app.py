@@ -33,6 +33,7 @@ def upload():
     try:
 
         file = request.files.get("file")
+        print(file.name)
         file.save("./src/data.csv")
         print(file.filename)
         """ Utils.strs_to_csv("./src/data.csv") """
