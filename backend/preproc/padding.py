@@ -4,6 +4,7 @@ from preproc.utilities import Utils
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+import pandas as pd
 
 from preproc.logger import Logger
 
@@ -25,7 +26,7 @@ class Padding:
     '''
 
     def __init__(self, data: np.ndarray, column_index: int, method: PaddingMethods) -> None:
-        self.data = data.astype(np.float32)
+        self.data = data
         self.column_index = column_index
         self.column = self.data[:, column_index]
         self.method: PaddingMethods = method
@@ -65,17 +66,17 @@ class Padding:
                 raise ValueError
 
     def _zero_padding(self):
-        self.column[np.isnan(self.column)] = 0
+        self.column[pd.isnull(self.column)] = 0
         self.data[:, self.column_index] = self.column
         return self.data
 
     def _mean_padding(self):
-        self.column[np.isnan(self.column)] = self.column[np.logical_not(np.isnan(self.column))].mean()
+        self.column[pd.isnull(self.column)] = self.column[np.logical_not(pd.isnull(self.column))].mean()
         self.data[:, self.column_index] = self.column
         return self.data
 
     def _median_padding(self):
-        self.column[np.isnan(self.column)] = np.median(self.column[np.logical_not(np.isnan(self.column))])
+        self.column[pd.isnull(self.column)] = np.median(self.column[np.logical_not(pd.isnull(self.column))])
         self.data[:, self.column_index] = self.column
         return self.data
 
@@ -119,7 +120,7 @@ class Padding:
         rows, _ = self.data.shape
         index = 0
         for r in range(rows):
-            if np.isnan(self.data[r, self.column_index]):
+            if pd.isnull(self.data[r, self.column_index]):
                 self.data[r, self.column_index] = predictions[index]
                 index += 1
         return self.data

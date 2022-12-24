@@ -19,7 +19,7 @@ class Norm:
     '''
 
     def __init__(self, data: np.ndarray, column_index: int, method: NormMethods) -> None:
-        self.data = data.astype(np.float32)
+        self.data = data
         self.column_index = column_index
         self.column = self.data[:, column_index]
         self.method: NormMethods = method

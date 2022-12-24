@@ -26,7 +26,7 @@ class Utils:
             col = data[:, c]
             isnan = False
             for i in col:
-                if np.isnan(i):
+                if pd.isnull(i):
                     res.append(False)
                     isnan = True
                     break
@@ -49,7 +49,7 @@ class Utils:
         pred_data = []
         for r in range(rows):
             row = data[r]
-            if np.isnan(row[target]): # append to pred_data
+            if pd.isnull(row[target]): # append to pred_data
                 pred_data.append(np.delete(row, target))
             else:
                 X.append(np.delete(row, target))
@@ -61,8 +61,7 @@ class Utils:
             _lines = f.readlines()
         with open(fname, 'w') as f:
             lines = [line[1:-2] + '\n' for line in _lines]
-            f.writelines(lines)
-        
+            f.writelines(lines)    
 
     def gen_fname(fname: str):
         ext = fname.split('.')[-1]

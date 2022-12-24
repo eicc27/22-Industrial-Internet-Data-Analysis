@@ -17,6 +17,7 @@ from preproc.normalization import Norm
 from preproc.padding import Padding
 from preproc.dataloader import Dataloader
 from preproc.utilities import Utils
+from preproc.logger import Logger
 
 
 app = Flask(__name__)
@@ -36,7 +37,7 @@ def upload():
         print(file.name)
         file.save("./src/data.csv")
         print(file.filename)
-        """ Utils.strs_to_csv("./src/data.csv") """
+        # Utils.strs_to_csv("./src/data.csv")
     except:
         return jsonify({
             'code': 400,
@@ -69,16 +70,16 @@ def preproc():
     labels_p.append(labels[req['pred_column']])
     if req['padding']:
         for i, padding in enumerate(req['padding']):
-            if padding:
-                try:
-                    print(i)
+            if padding and len(padding):
+                # try:
+                    Logger(f'Padding column {labels_p[i]} using {padding}').log('info')
                     data = Padding(data, i, padding).run()
-                except ValueError:
-                    return jsonify({
-                        'code': 400,
-                        'msg': "padding算法出错",
-                        'column_index': i
-                    })
+                # except ValueError:
+                #     return jsonify({
+                #         'code': 400,
+                #         'msg': "padding算法出错",
+                #         'column_index': i
+                #     })
     pd.DataFrame(data).to_csv('./d.csv')
     if req['norm']:
         for i, norm in enumerate(req['norm']):
@@ -94,7 +95,7 @@ def preproc():
     if req['sifting']:
         try:
             print(req['sifting']['method'])
-            data = Sifting(data, req['sifting']['method'], -1, req['sifting']['th']).run()
+            data = Sifting(data, req['sifting']['method'], req['pred_column'], req['sifting']['th']).run()
         except ValueError as e:
                     print(e)
                     return jsonify({

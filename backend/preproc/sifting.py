@@ -20,7 +20,7 @@ class Sifting:
     '''
 
     def __init__(self, data: np.ndarray, method: Literal['mad', 'dbscan', 'if'], column: int, threshold: float | None = None) -> None:
-        self.data = data.astype(np.float32)
+        self.data = data
         self.column = self.data[:, column]
         self.threshold = threshold
         self.method = method
